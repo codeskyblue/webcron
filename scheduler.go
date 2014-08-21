@@ -7,18 +7,18 @@ import "os/signal"
 import "syscall"
 import "github.com/robfig/cron"
 
-func execute(command string, args []string)(output string, e error) {
+func execute(command string, args []string)() {
 
     println("executing:", command, strings.Join(args, " "))
 
     cmd := exec.Command(command, args...)
-    out, err := cmd.Output()
 
-    if err != nil {
-        return "", err
-    }
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
 
-    return string(out), nil
+    cmd.Run()
+
+    cmd.Wait()
 }
 
 func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
@@ -33,13 +33,8 @@ func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
 
     c.AddFunc(schedule, func() {
         wg.Add(1)
-        out, err := execute(command, args)
+        execute(command, args)
         wg.Done()
-        if err != nil {
-            println(err.Error())
-        }
-
-        println(out)
     })
 
     return c, wg
