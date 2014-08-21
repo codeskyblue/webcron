@@ -1,0 +1,10 @@
+#!/bin/bash
+
+VOLUME="${DOCKER_REMOTE_PATH}${PWD#${DOCKER_CLIENT_PATH}}/:/scheduler"
+
+docker run -i -t \
+    --rm \
+    -w /scheduler \
+    -v $VOLUME \
+    michaloo/golangdev \
+    $@

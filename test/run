@@ -1,0 +1,3 @@
+#!/bin/bash
+
+go run ./scheduler.go "* * * * * *" /bin/bash -c "echo 1;"
