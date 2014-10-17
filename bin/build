@@ -1,10 +1,13 @@
 #!/bin/bash
 
 
-cd /scheduler
 go get
+
 rm -rf dist
 mkdir -p dist
+
 cd ./dist
-go build -o go-cron /scheduler/scheduler.go
+
+go build -o go-cron ../go-cron.go
+
 tar -cf go-cron.tar.gz go-cron

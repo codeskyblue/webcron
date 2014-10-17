@@ -1,0 +1,14 @@
+containers:
+    go-cron:
+        image: michaloo/golangdev
+        run:
+            volume:
+                - ".:/go-cron"
+            interactive: true
+            tty: true
+            workdir: "/go-cron"
+            entrypoint: /bin/bash
+            cmd:
+                - -c
+                - "bash"
+            rm: true
