@@ -1,14 +1,11 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"os"
 	"os/exec"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/robfig/cron"
 )
@@ -54,6 +51,7 @@ func stop(c *cron.Cron, wg *sync.WaitGroup) {
 	os.Exit(0)
 }
 
+/*
 func main() {
 	flag.Parse()
 
@@ -66,3 +64,4 @@ func main() {
 
 	stop(c, wg)
 }
+*/
