@@ -1,0 +1,49 @@
+{
+  "name": "ng-notify",
+  "version": "0.6.3",
+  "authors": [
+    "Mat Owens <mat@peglegg.net>"
+  ],
+  "description": "A simple, lightweight module for displaying notifications in your AngularJS app.",
+  "main": [
+    "./src/scripts/ng-notify.js",
+    "./src/styles/ng-notify.css"
+  ],
+  "keywords": [
+    "AngularJS",
+    "App",
+    "notify",
+    "Provider"
+  ],
+  "license": "MIT",
+  "homepage": "http://matowens.github.com/ng-notify",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "demo",
+    ".gitignore",
+    ".jshintrc",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "angular": "~1.4.0"
+  },
+  "devDependencies": {
+    "angular-sanitize": "~1.4.0",
+    "angular-mocks": "~1.4.0"
+  },
+  "_release": "0.6.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.6.3",
+    "commit": "6f15c99344196d02219be563335f395d58b77b08"
+  },
+  "_source": "git://github.com/matowens/ng-notify.git",
+  "_target": "~0.6.3",
+  "_originalSource": "ng-notify",
+  "_direct": true
+}

@@ -1,0 +1,20 @@
+{
+  "name": "go-cron",
+  "version": "0.0.2",
+  "homepage": "https://github.com/codeskyblue/go-cron",
+  "authors": [
+    "shengxiang <codeskyblue@gmail.com"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angularjs": "~1.4.4",
+    "ng-notify": "~0.6.3"
+  }
+}

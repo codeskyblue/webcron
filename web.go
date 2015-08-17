@@ -5,7 +5,9 @@ import "github.com/Unknwon/macaron"
 var m = macaron.Classic()
 
 func init() {
-	m.Use(macaron.Renderer())
+	m.Use(macaron.Renderer(macaron.RenderOptions{
+		Delims: macaron.Delims{"[[", "]]"},
+	}))
 }
 
 func initRoutes() {
