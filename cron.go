@@ -20,13 +20,25 @@ type Task struct {
 	Description string `json:"description"`
 }
 
-func execute(command string, args []string) {
+func (task *Task) Run() (err error) {
+	switch runtime.GOOS {
+	case "windows":
+		err = execute("cmd", []string{"/c", task.Command})
+	case "linux":
+		fallthrough
+	default:
+		err = execute("/bin/bash", []string{"-c", task.Command})
+	}
+	return
+}
+
+func execute(command string, args []string) error {
 	log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	return cmd.Run()
 }
 
 func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
@@ -41,18 +53,15 @@ func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
 	//println("new cron:", schedule)
 
 	for _, task := range tasks {
-		c.AddFunc(task.Schedule, func() {
+		ta := task // make a copy, this is necessary
+		taskFunc := func() {
 			wg.Add(1)
-			switch runtime.GOOS {
-			case "windows":
-				execute("cmd", []string{"/c", task.Command})
-			case "linux":
-				fallthrough
-			default:
-				execute("/bin/bash", []string{"-c", task.Command})
+			defer wg.Done()
+			if err := ta.Run(); err != nil {
+				log.Println(ta.Name, err)
 			}
-			wg.Done()
-		})
+		}
+		c.AddFunc(task.Schedule, taskFunc)
 	}
 
 	return c, wg

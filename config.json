@@ -1,8 +1,14 @@
 [
 	{
-		"name": "test",
+		"name": "test1",
 		"schedule": "* * * * * *",
-		"command": "echo 1",
+		"command": "echo test1",
+		"description": "some desc"
+	},
+	{
+		"name": "test2",
+		"schedule": "* * * * * *",
+		"command": "echo test2",
 		"description": "some desc"
 	}
 ]
