@@ -1,14 +1,24 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 
 	"github.com/robfig/cron"
 )
+
+type Task struct {
+	Name        string `json:"name"`
+	Schedule    string `json:"schedule"`
+	Command     string `json:"command"`
+	Description string `json:"description"`
+}
 
 func execute(command string, args []string) {
 	log.Printf("executing: %s %s", command, strings.Join(args, " "))
@@ -20,20 +30,30 @@ func execute(command string, args []string) {
 }
 
 func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
-	var schedule string = os.Args[1]
+	/*var schedule string = os.Args[1]
 	var command string = os.Args[2]
 	var args []string = os.Args[3:len(os.Args)]
 
+	*/
 	wg := &sync.WaitGroup{}
 
 	c := cron.New()
-	println("new cron:", schedule)
+	//println("new cron:", schedule)
 
-	c.AddFunc(schedule, func() {
-		wg.Add(1)
-		execute(command, args)
-		wg.Done()
-	})
+	for _, task := range tasks {
+		c.AddFunc(task.Schedule, func() {
+			wg.Add(1)
+			switch runtime.GOOS {
+			case "windows":
+				execute("cmd", []string{"/c", task.Command})
+			case "linux":
+				fallthrough
+			default:
+				execute("/bin/bash", []string{"-c", task.Command})
+			}
+			wg.Done()
+		})
+	}
 
 	return c, wg
 }
@@ -49,6 +69,16 @@ func stop(c *cron.Cron, wg *sync.WaitGroup) {
 	wg.Wait()
 	println("Exiting")
 	os.Exit(0)
+}
+
+func loadTasks(filename string) ([]Task, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	var tasks []Task
+	err = json.Unmarshal(data, &tasks)
+	return tasks, err
 }
 
 /*

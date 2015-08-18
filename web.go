@@ -1,6 +1,13 @@
 package main
 
-import "github.com/Unknwon/macaron"
+import (
+	"flag"
+	"log"
+	"net/http"
+	"strconv"
+
+	"github.com/Unknwon/macaron"
+)
 
 var m = macaron.Classic()
 
@@ -16,7 +23,25 @@ func initRoutes() {
 	})
 }
 
+var (
+	cfgFile = flag.String("c", "config.json", "crontab setting file")
+	srvPort = flag.Int("p", 4000, "port to listen")
+	tasks   []Task
+)
+
 func main() {
+	flag.Parse()
+
+	var err error
+	tasks, err = loadTasks(*cfgFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(tasks)
+	cr, _ := create()
+	cr.Start()
+
 	initRoutes()
-	m.Run()
+	log.Printf("Listening on *:%d", *srvPort)
+	http.ListenAndServe(":"+strconv.Itoa(*srvPort), m)
 }

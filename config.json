@@ -1,0 +1,8 @@
+[
+	{
+		"name": "test",
+		"schedule": "* * * * * *",
+		"command": "echo 1",
+		"description": "some desc"
+	}
+]
