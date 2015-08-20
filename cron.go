@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/robfig/cron"
 )
@@ -20,25 +22,37 @@ type Task struct {
 	Description string `json:"description"`
 }
 
-func (task *Task) Run() (err error) {
+func (task *Task) Run(trigger string) (err error) {
+	_, rec, err := keeper.NewRecord(task.Name)
+	if err != nil {
+		return err
+	}
+	rec.Trigger = trigger
 	switch runtime.GOOS {
 	case "windows":
-		err = execute("cmd", []string{"/c", task.Command})
+		err = execute(rec, "cmd", []string{"/c", task.Command})
 	case "linux":
 		fallthrough
 	default:
-		err = execute("/bin/bash", []string{"-c", task.Command})
+		err = execute(rec, "/bin/bash", []string{"-c", task.Command})
 	}
 	return
 }
 
-func execute(command string, args []string) error {
+func execute(rec *Record, command string, args []string) error {
+	start := time.Now()
 	log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
+	cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
+	err := cmd.Run()
+	if err != nil { // FIXME(ssx): need extract exit code
+		rec.ExitCode = 1
+	}
+	rec.Duration = time.Since(start)
+	keeper.DoneRecord(rec.Key())
+	return err
 }
 
 func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
@@ -57,7 +71,7 @@ func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
 		taskFunc := func() {
 			wg.Add(1)
 			defer wg.Done()
-			if err := ta.Run(); err != nil {
+			if err := ta.Run(TRIGGER_SCHEDULE); err != nil {
 				log.Println(ta.Name, err)
 			}
 		}

@@ -38,6 +38,19 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println(tasks)
+
+	keeper = NewKeeper(tasks)
+
+	key, rec, err := keeper.NewRecord("test1")
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(key, rec)
+
+	if err := keeper.DoneRecord(key); err != nil {
+		log.Fatal(err)
+	}
+
 	cr, _ := create()
 	cr.Start()
 
