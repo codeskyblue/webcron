@@ -61,11 +61,17 @@
 			<div class="row">
 				<div class="col-md-9">
 					<div du-scroll-container>
-						<p ng-repeat="t in tasks" id="{{t.name}}">
-							Name: {{t.name}}<br>
-							Schedule: {{t.schedule}}<br>
-							Command: {{t.command}}
-						</p>
+						<div ng-repeat="t in tasks" id="{{t.name}}" class="panel panel-info">
+							<div class="panel-heading">
+								<h4>{{t.name}} <small>{{t.schedule}}</small></h4>
+							</div>
+							<div class="panel-body">
+								Command: {{t.command}}
+							</div>
+							<div class="panel-footer">
+								{{t.description}}
+							</div>
+						</div>
 					</div>
 				</div>
 				<div class="col-md-3">
