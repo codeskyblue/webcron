@@ -1,0 +1,17 @@
+{
+    "paths": [
+        "."
+    ],
+    "depth": 2,
+    "exclude": [],
+    "include": [
+        "\\.(go|py|php|java|cpp|h|rb)$"
+    ],
+    "command": "go build && ./go-cron -p 8001",
+    "env": {
+        "POWERD_BY": "github.com/codeskyblue/fswatch"
+    },
+    "autorestart": false,
+    "restart-interval": 0,
+    "kill-signal": "KILL"
+}

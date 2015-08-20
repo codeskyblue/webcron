@@ -15,6 +15,7 @@
   ],
   "dependencies": {
     "angularjs": "~1.4.4",
-    "ng-notify": "~0.6.3"
+    "ng-notify": "~0.6.3",
+    "angular-scroll": "~0.7.2"
   }
 }
