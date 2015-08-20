@@ -24,7 +24,7 @@ func initRoutes() {
 	m.Get("/", func(ctx *macaron.Context) {
 		data, _ := json.Marshal(tasks)
 		ctx.Data["Tasks"] = template.JS(string(data))
-		ctx.HTML(200, "index")
+		ctx.HTML(200, "homepage")
 	})
 }
 
@@ -48,5 +48,5 @@ func main() {
 
 	initRoutes()
 	log.Printf("Listening on *:%d", *srvPort)
-	http.ListenAndServe(":"+strconv.Itoa(*srvPort), m)
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(*srvPort), m))
 }

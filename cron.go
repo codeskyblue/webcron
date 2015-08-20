@@ -33,6 +33,7 @@ func (task *Task) Run() (err error) {
 }
 
 func execute(command string, args []string) error {
+	return nil
 	log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)

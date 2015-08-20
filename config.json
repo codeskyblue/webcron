@@ -9,6 +9,6 @@
 		"name": "test2",
 		"schedule": "* * * * * *",
 		"command": "echo test2",
-		"description": "some desc"
+		"description": "very nice page"
 	}
 ]
