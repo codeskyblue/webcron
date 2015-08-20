@@ -1,0 +1,50 @@
+/*
+ * homepage.css
+ * Copyright (C) 2015 hzsunshx
+ *
+ * Distributed under terms of the MIT license.
+ */
+
+body {
+	font-family: "Source Sans Pro",Helvetica,sans-serif;
+}
+#search-form {
+	margin: 16px;
+}
+#main-content {
+	margin-right: 16px;
+}
+#left {
+	border-right: 2px solid #f2f2f2;
+}
+
+ul.side-nav>li>a.active{
+	color: red;
+	font-weight: 800;
+}
+ul.side-nav>li{
+	background-color: #fff;
+	margin: 5px 0;
+	border-left: 8px solid;
+	border-radius: 0;
+	border-color: #3FA75F;
+}
+.site-nav>li{
+	display: block;
+	width: 100%;
+	font-size: 14px;
+}
+.item-title {
+	width: 75%;
+	color: #3FA75F;
+	display: inline-block;
+	margin: 0;
+	margin-bottom: 10px;
+	font-size: 16px;
+	line-height: 22px;
+	font-weight: 400;
+}
+p.item-info {
+	margin: 0px;
+	color: rgb(141, 141, 141);
+}
