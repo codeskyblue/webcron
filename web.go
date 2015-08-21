@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/Unknwon/macaron"
@@ -26,11 +27,16 @@ func initRoutes() {
 		ctx.Data["Tasks"] = template.JS(string(data))
 		ctx.HTML(200, "index")
 	})
+
+	m.Get("/settings", func(ctx *macaron.Context) {
+		ctx.HTML(200, "settings")
+	})
 }
 
 var (
 	cfgFile = flag.String("c", "config.json", "crontab setting file")
 	srvPort = flag.Int("p", 4000, "port to listen")
+	logDir  = flag.String("logdir", "logs", "log directory")
 	tasks   []Task
 )
 
@@ -38,6 +44,9 @@ func main() {
 	flag.Parse()
 
 	var err error
+	if _, err = os.Stat(*logDir); err != nil {
+		os.Mkdir(*logDir, 0755)
+	}
 	tasks, err = loadTasks(*cfgFile)
 	if err != nil {
 		log.Fatal(err)
