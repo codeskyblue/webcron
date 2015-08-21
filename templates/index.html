@@ -4,16 +4,85 @@
 	<link href="bower_components/ng-notify/dist/ng-notify.min.css" rel="stylesheet">
 	<script src="bower_components/angularjs/angular.min.js"></script>
 	<script src="bower_components/ng-notify/dist/ng-notify.min.js"></script>
-	<body>
+	<script src="bower_components/angular-scroll/angular-scroll.min.js"></script>
+	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+	<script src="http://apps.bdimg.com/libs/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet">
+	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet">
+	<style>
+		.h100 {
+			display: block;
+			height: 300px;
+		}
+		ul.nav>li>a.active{
+			color: red;
+			font-weight: 800;
+		}
+	</style>
 		<script>
-			var app = angular.module("cron", ["ngNotify"]);
-			app.controller("MainCtrl", function($scope, $http, ngNotify){
+			var app = angular.module("cron", ["ngNotify", "duScroll"])
+				.value('duScrollOffset', 30);
+			app.controller("MainCtrl", function($scope, $http, ngNotify, $document){
 				ngNotify.set("Hi");
-				$scope.name = "world";
+				$scope.tasks = [[.Tasks]];
+				console.log($scope.tasks);
+				var top = 400;
+				var duration = 2000;
+				//$document.scrollTop(top, duration).then(function() {
+					//console && console.log('You just scrolled to the top!');
+				//});
 			});
 		</script>
-		<div ng-controller="MainCtrl">
-			<h1>Hello {{name}}</h1>
+	<body>
+		<div class="navbar navbar-default">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="/">
+						WebCrontab
+					</a>
+				</div>
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li><a href="/">主页</a></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="container" ng-controller="MainCtrl">
+			<div class="row">
+				<div class="col-md-9">
+					<div du-scroll-container>
+						<div ng-repeat="t in tasks" id="{{t.name}}" class="panel panel-info">
+							<div class="panel-heading">
+								<h4>{{t.name}} <small>{{t.schedule}}</small></h4>
+							</div>
+							<div class="panel-body">
+								Command: {{t.command}}
+							</div>
+							<div class="panel-footer">
+								{{t.description}}
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<nav class="affix">
+						<ul class="nav">
+							<li ng-repeat="t in tasks">
+								<a href="#{{t.name}}" du-smooth-scroll du-scrollspy>{{t.name}}</a>
+							</li>
+						</ul>
+					</nav>
+				</div>
 		</div>
 	</body>
 </html>

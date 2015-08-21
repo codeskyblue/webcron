@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,6 +14,7 @@ import (
 var m = macaron.Classic()
 
 func init() {
+
 	m.Use(macaron.Renderer(macaron.RenderOptions{
 		Delims: macaron.Delims{"[[", "]]"},
 	}))
@@ -19,6 +22,8 @@ func init() {
 
 func initRoutes() {
 	m.Get("/", func(ctx *macaron.Context) {
+		data, _ := json.Marshal(tasks)
+		ctx.Data["Tasks"] = template.JS(string(data))
 		ctx.HTML(200, "index")
 	})
 }
