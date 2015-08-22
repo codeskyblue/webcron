@@ -44,6 +44,11 @@
 				};
 			});
 			$(function(){
+				$('[data-toggle="tooltip"]').tooltip();
+				$("#schedule-hint").click(function(){
+					$("#modal-schedule").modal();
+					return false;
+				});
 			});
 		</script>
 	<body>
@@ -77,6 +82,31 @@
 				<div class="col-md-9">
 					<div class="settings">
 						<section class="settings-section">
+							<h2 class="small-title">General Setting</h2>
+							<form class="form">
+								<div class="form-group">
+									<label>Name</label>
+									<input class="form-control" type="text" required>
+								</div>
+								<div class="form-group">
+									<label>Schedule
+										<a href="#" id="schedule-hint" data-toggle="tooltip" data-placement="top" title="[sec min hour day month week] click to see more">
+											<span class="glyphicon glyphicon-question-sign"></span>
+										</a>
+									</label>
+									<input class="form-control" type="text" required>
+								</div>
+								<div class="form-group">
+									<label>Command</label>
+									<textarea class="form-control" required placeholder="Linux Shell or Windows Batch command ..."></textarea>
+								</div>
+								<div class="form-group">
+									<label>Description</label>
+									<textarea class="form-control" required></textarea>
+								</div>
+							</form>
+						</section>
+						<section class="settings-section">
 							<h2 class="small-title">Environment Variables</h2>
 							<ul class="settings-list-envvars">
 								<li ng-repeat="(name, value) in envVars">
@@ -98,7 +128,7 @@
 							<form class="form" ng-submit="submitAddEnv(newEnv)">
 								<div class="form-group">
 									<div class="form-elem">
-										<input type="text" ng-model="newEnv.name" class="form-control env-name" placeholder="Name">
+										<input type="text" ng-model="newEnv.name" class="form-control env-name" placeholder="Name" required>
 									</div>
 									<div class="form-elem">
 										<input type="text" ng-model="newEnv.value" class="form-control env-value" placeholder="Value">
@@ -109,6 +139,7 @@
 								</div>
 							</form>
 						</section>
+						<button class="btn btn-success">Save</button>
 					</div>
 					<div du-scroll-container>
 						<div ng-repeat="t in tasks" id="{{t.name}}" class="panel panel-info">
@@ -124,6 +155,19 @@
 						</div>
 					</div>
 				</div>
+		</div>
+		<div class="modal fade" id="modal-schedule">
+		  <div class="modal-dialog">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Schedule Help</h4>
+			  </div>
+			  <div class="modal-body">
+				<p>* * * * *  : every one second</p>
+			  </div>
+			</div>
+		  </div>
 		</div>
 	</body>
 </html>
