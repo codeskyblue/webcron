@@ -8,18 +8,19 @@
 	-->
 	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet">
 	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet">
+	<link href="http://apps.bdimg.com/libs/bootstrap-glyphicons/1.0/css/bootstrap-glyphicons.css" rel="stylesheet">
 
 	<!-- bootstrap -->
 	<script src="bower_components/jquery/dist/jquery.min.js"></script>
-	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 	<!-- angular -->
 	<script src="bower_components/angularjs/angular.min.js"></script>
 	<script src="bower_components/ng-notify/dist/ng-notify.min.js"></script>
 	<script src="bower_components/angular-scroll/angular-scroll.min.js"></script>
+	<script src="http://apps.bdimg.com/libs/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 	<!--
 	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
-	<script src="http://apps.bdimg.com/libs/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
 	-->
 	<link href="/css/settings.css" rel="stylesheet">
 	<style>
@@ -33,9 +34,16 @@
 				.value('duScrollOffset', 30);
 			app.controller("MainCtrl", function($scope, $http, ngNotify, $document){
 				$scope.name = "hi";
+				$scope.envVars = {GOPATH: "/User/skyblue"};
+				$scope.submitAddEnv = function(e){
+					$scope.envVars[e.name] = e.value;
+					e.name = e.value = "";
+				};
+				$scope.envDel = function(name) {
+					delete($scope.envVars[name]);
+				};
 			});
 			$(function(){
-				$(":checkbox").bootstrapSwitch();
 			});
 		</script>
 	<body>
@@ -70,16 +78,33 @@
 					<div class="settings">
 						<section class="settings-section">
 							<h2 class="small-title">Environment Variables</h2>
-							<form class="form">
+							<ul class="settings-list-envvars">
+								<li ng-repeat="(name, value) in envVars">
+									<div class="settings-envvar">
+										<div class="env-var-name">{{name}}</div>
+										<div class="env-var-value">
+											<input class="form-control" type="text" readonly="readonly" value="{{value}}">
+										</div>
+										<div class="env-var-action">
+												<a href="#" ng-click="envDel(name)">
+													<span class="glyphicon glyphicon-trash"></span>
+												</a>
+											<div class="tooltip">
+											</div>
+										</div>
+									</div>
+								</li>
+							</ul>
+							<form class="form" ng-submit="submitAddEnv(newEnv)">
 								<div class="form-group">
 									<div class="form-elem">
-										<input type="text" class="form-control env-name" placeholder="Name">
+										<input type="text" ng-model="newEnv.name" class="form-control env-name" placeholder="Name">
 									</div>
 									<div class="form-elem">
-										<input type="text" class="form-control env-value" placeholder="Value">
+										<input type="text" ng-model="newEnv.value" class="form-control env-value" placeholder="Value">
 									</div>
-									<div class="form-elem switch cron-switch">
-										<input type="checkbox" checked>
+									<div class="form-elem">
+										<button type="submit" class="btn btn-info env-button">Add</button>
 									</div>
 								</div>
 							</form>
