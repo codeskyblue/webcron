@@ -34,13 +34,26 @@
 				.value('duScrollOffset', 30);
 			app.controller("MainCtrl", function($scope, $http, ngNotify, $document){
 				$scope.name = "hi";
+				$scope.task = {};
+				$scope.fresh = true; // Is that newer
 				$scope.envVars = {GOPATH: "/User/skyblue"};
-				$scope.submitAddEnv = function(e){
+				$scope.addEnv = function(e){
 					$scope.envVars[e.name] = e.value;
 					e.name = e.value = "";
 				};
 				$scope.envDel = function(name) {
 					delete($scope.envVars[name]);
+				};
+				$scope.save = function(){
+					$scope.task['environ'] = $scope.envVars;
+					$http.post("/api/tasks", $scope.task)
+						.success(function(res){
+							ngNotify.set(res);
+							$scope.fresh = false;
+						})
+						.error(function(res){
+							ngNotify.set(res, 'error');
+						});
 				};
 			});
 			$(function(){
@@ -81,65 +94,74 @@
 				</div>
 				<div class="col-md-9">
 					<div class="settings">
-						<section class="settings-section">
-							<h2 class="small-title">General Setting</h2>
-							<form class="form">
-								<div class="form-group">
-									<label>Name</label>
-									<input class="form-control" type="text" required>
+						<form class="form" ng-submit="save()">
+							<h2 ng-hide="fresh">{{task.name}}</h2>
+							<section class="settings-section">
+								<h2 class="small-title">General Setting</h2>
+								<div class="form-group" ng-show="fresh">
+									<div class="row">
+										<div class="col-md-3">
+											<label>Name</label>
+											<input ng-model="task.name" class="input-name form-control" type="text" required>
+										</div>
+										<div class="col-md-9">
+											<label>Description</label>
+											<input ng-model="task.description" class="input-desc form-control" type="text">
+										</div>
+									</div>
+								</div>
+								<div class="form-group" ng-show="!fresh">
+									<label>Description</label>
+									<input ng-model="task.description" class="form-control" type="text">
 								</div>
 								<div class="form-group">
 									<label>Schedule
-										<a href="#" id="schedule-hint" data-toggle="tooltip" data-placement="top" title="[sec min hour day month week] click to see more">
+										<a href="#" tabindex=-1 id="schedule-hint" data-toggle="tooltip" data-placement="top" title="[sec min hour day month week] click to see more">
 											<span class="glyphicon glyphicon-question-sign"></span>
 										</a>
 									</label>
-									<input class="form-control" type="text" required>
+									<input ng-model="task.schedule" class="input-schedule form-control" type="text" required>
 								</div>
 								<div class="form-group">
 									<label>Command</label>
-									<textarea class="form-control" required placeholder="Linux Shell or Windows Batch command ..."></textarea>
+									<textarea ng-model="task.command" class="form-control" required placeholder="Linux Shell or Windows Batch command ..."></textarea>
 								</div>
-								<div class="form-group">
-									<label>Description</label>
-									<textarea class="form-control" required></textarea>
-								</div>
-							</form>
-						</section>
-						<section class="settings-section">
-							<h2 class="small-title">Environment Variables</h2>
-							<ul class="settings-list-envvars">
-								<li ng-repeat="(name, value) in envVars">
-									<div class="settings-envvar">
-										<div class="env-var-name">{{name}}</div>
-										<div class="env-var-value">
-											<input class="form-control" type="text" readonly="readonly" value="{{value}}">
-										</div>
-										<div class="env-var-action">
-												<a href="#" ng-click="envDel(name)">
-													<span class="glyphicon glyphicon-trash"></span>
-												</a>
-											<div class="tooltip">
+							</section>
+							<section class="settings-section">
+								<h2 class="small-title">Environment Variables</h2>
+								<ul class="settings-list-envvars">
+									<li ng-repeat="(name, value) in envVars">
+										<div class="settings-envvar">
+											<div class="env-var-name">{{name}}</div>
+											<div class="env-var-value">
+												<input class="form-control" type="text" readonly="readonly" value="{{value}}">
+											</div>
+											<div class="env-var-action">
+													<a href="#" ng-click="envDel(name)">
+														<span class="glyphicon glyphicon-trash"></span>
+													</a>
+												<div class="tooltip">
+												</div>
 											</div>
 										</div>
-									</div>
-								</li>
-							</ul>
-							<form class="form" ng-submit="submitAddEnv(newEnv)">
-								<div class="form-group">
-									<div class="form-elem">
-										<input type="text" ng-model="newEnv.name" class="form-control env-name" placeholder="Name" required>
-									</div>
-									<div class="form-elem">
-										<input type="text" ng-model="newEnv.value" class="form-control env-value" placeholder="Value">
-									</div>
-									<div class="form-elem">
-										<button type="submit" class="btn btn-info env-button">Add</button>
+									</li>
+								</ul>
+								<div class="form">
+									<div class="form-group">
+										<div class="form-elem">
+											<input type="text" ng-model="newEnv.name" class="form-control env-name" placeholder="Name">
+										</div>
+										<div class="form-elem">
+											<input type="text" ng-model="newEnv.value" class="form-control env-value" placeholder="Value">
+										</div>
+										<div class="form-elem">
+											<button ng-disabled="!newEnv.name" ng-click="addEnv(newEnv)" class="btn btn-info env-button">Add</button>
+										</div>
 									</div>
 								</div>
-							</form>
-						</section>
-						<button class="btn btn-success">Save</button>
+							</section>
+							<button class="btn btn-success">Save</button>
+						</form>
 					</div>
 					<div du-scroll-container>
 						<div ng-repeat="t in tasks" id="{{t.name}}" class="panel panel-info">
@@ -164,7 +186,10 @@
 				<h4 class="modal-title">Schedule Help</h4>
 			  </div>
 			  <div class="modal-body">
-				<p>* * * * *  : every one second</p>
+				<p>* * * * * *  : every one second</p>
+				<p>*/5 * * * * *  : every 5 second</p>
+				<p>0 10 1 * * *  : 1 hour 10 minute every day</p>
+				<p>@hourly : every hour</p>
 			  </div>
 			</div>
 		  </div>

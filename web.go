@@ -4,18 +4,19 @@ import (
 	"encoding/json"
 	"flag"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 
+	"github.com/qiniu/log"
+
 	"github.com/Unknwon/macaron"
+	"github.com/go-xorm/xorm"
 )
 
 var m = macaron.Classic()
 
 func init() {
-
 	m.Use(macaron.Renderer(macaron.RenderOptions{
 		Delims: macaron.Delims{"[[", "]]"},
 	}))
@@ -31,6 +32,17 @@ func initRoutes() {
 	m.Get("/settings", func(ctx *macaron.Context) {
 		ctx.HTML(200, "settings")
 	})
+
+	m.Post("/api/tasks", func(ctx *macaron.Context) {
+		var task Task
+		dec := json.NewDecoder(ctx.Req.Body().ReadCloser())
+		if err := dec.Decode(&task); err != nil {
+			ctx.Error(500, err.Error())
+			return
+		}
+		log.Println(task)
+		ctx.JSON(200, "New task has been added")
+	})
 }
 
 var (
@@ -44,6 +56,13 @@ func main() {
 	flag.Parse()
 
 	var err error
+	//xe, err = xorm.NewEngine("sqlite3", "./test.db")
+	xe, err = xorm.NewEngine("mysql", "localhost@/cron?charset=utf-8")
+	if err != nil {
+		log.Fatal(err)
+	}
+	xe.Sync(Record{})
+
 	if _, err = os.Stat(*logDir); err != nil {
 		os.Mkdir(*logDir, 0755)
 	}

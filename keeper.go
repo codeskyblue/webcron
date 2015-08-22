@@ -46,13 +46,13 @@ func (k *Keeper) NewRecord(name string) (key string, rec *Record, err error) {
 	k.tkmu.RLock()
 	defer k.tkmu.RUnlock()
 
-	log.Println(k.tasks)
+	//log.Println(k.tasks)
 	if _, ok := k.tasks[name]; !ok {
 		return "", nil, fmt.Errorf("No such task has name: %s", name)
 	}
 
 	var count int
-	db.Model(Record{}).Where("name = ?", name).Count(&count)
+	//db.Model(Record{}).Where("name = ?", name).Count(&count)
 	idx := count
 	rec = &Record{
 		Name:   name,

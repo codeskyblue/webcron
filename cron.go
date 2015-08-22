@@ -2,13 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 
@@ -16,10 +13,11 @@ import (
 )
 
 type Task struct {
-	Name        string `json:"name"`
-	Schedule    string `json:"schedule"`
-	Command     string `json:"command"`
-	Description string `json:"description"`
+	Name        string            `json:"name"`
+	Schedule    string            `json:"schedule"`
+	Command     string            `json:"command"`
+	Description string            `json:"description"`
+	Environ     map[string]string `json:"environ"`
 }
 
 func (task *Task) Run(trigger string) (err error) {
@@ -41,11 +39,11 @@ func (task *Task) Run(trigger string) (err error) {
 
 func execute(rec *Record, command string, args []string) error {
 	start := time.Now()
-	log.Printf("executing: %s %s", command, strings.Join(args, " "))
+	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)
-	cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
-	cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
+	//cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
+	//cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
 	err := cmd.Run()
 	if err != nil { // FIXME(ssx): need extract exit code
 		rec.ExitCode = 1
@@ -72,7 +70,7 @@ func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
 			wg.Add(1)
 			defer wg.Done()
 			if err := ta.Run(TRIGGER_SCHEDULE); err != nil {
-				log.Println(ta.Name, err)
+				//log.Println(ta.Name, err)
 			}
 		}
 		c.AddFunc(task.Schedule, taskFunc)
