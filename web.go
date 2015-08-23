@@ -57,7 +57,7 @@ func main() {
 
 	var err error
 	//xe, err = xorm.NewEngine("sqlite3", "./test.db")
-	xe, err = xorm.NewEngine("mysql", "localhost@/cron?charset=utf-8")
+	xe, err = xorm.NewEngine("mysql", "root:@/cron?charset=utf8")
 	if err != nil {
 		log.Fatal(err)
 	}
