@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -18,6 +19,7 @@ type Task struct {
 	Command     string            `json:"command"`
 	Description string            `json:"description"`
 	Environ     map[string]string `json:"environ"`
+	Enabled     bool              `json:"enabled"`
 }
 
 func (task *Task) Run(trigger string) (err error) {
@@ -42,8 +44,11 @@ func execute(rec *Record, command string, args []string) error {
 	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)
-	//cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
-	//cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
+	cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
+	cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
+	for k, v := range rec.T.Environ {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
 	err := cmd.Run()
 	if err != nil { // FIXME(ssx): need extract exit code
 		rec.ExitCode = 1
@@ -63,18 +68,6 @@ func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
 
 	c := cron.New()
 	//println("new cron:", schedule)
-
-	for _, task := range tasks {
-		ta := task // make a copy, this is necessary
-		taskFunc := func() {
-			wg.Add(1)
-			defer wg.Done()
-			if err := ta.Run(TRIGGER_SCHEDULE); err != nil {
-				//log.Println(ta.Name, err)
-			}
-		}
-		c.AddFunc(task.Schedule, taskFunc)
-	}
 
 	return c, wg
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"html/template"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -24,8 +24,8 @@ func init() {
 
 func initRoutes() {
 	m.Get("/", func(ctx *macaron.Context) {
-		data, _ := json.Marshal(tasks)
-		ctx.Data["Tasks"] = template.JS(string(data))
+		//data, _ := json.Marshal(tasks)
+		//ctx.Data["Tasks"] = template.JS(string(data))
 		ctx.HTML(200, "index")
 	})
 
@@ -40,19 +40,45 @@ func initRoutes() {
 			ctx.Error(500, err.Error())
 			return
 		}
+		if err := keeper.AddTask(task); err != nil {
+			ctx.Error(500, err.Error())
+			return
+		}
 		log.Println(task)
 		ctx.JSON(200, "New task has been added")
 	})
+
+	m.Put("/api/tasks", func(ctx *macaron.Context) {
+		var task Task
+		dec := json.NewDecoder(ctx.Req.Body().ReadCloser())
+		if err := dec.Decode(&task); err != nil {
+			ctx.Error(500, err.Error())
+			return
+		}
+		// FIXME(ssx): need change
+		task.Enabled = true
+		if err := keeper.PutTask(task.Name, task); err != nil {
+			ctx.Error(500, err.Error())
+			return
+		}
+		ctx.JSON(200, "Task modified")
+	})
+}
+
+type GlobalConfig struct {
+	SchedFile  string
+	LogDir     string
+	ServerPort int
 }
 
 var (
-	cfgFile = flag.String("c", "config.json", "crontab setting file")
-	srvPort = flag.Int("p", 4000, "port to listen")
-	logDir  = flag.String("logdir", "logs", "log directory")
-	tasks   []Task
+	gcfg GlobalConfig
 )
 
 func main() {
+	flag.StringVar(&gcfg.SchedFile, "sched", "sched.json", "file which store schedule setting")
+	flag.IntVar(&gcfg.ServerPort, "port", 4000, "port to listen")
+	flag.StringVar(&gcfg.LogDir, "logdir", "logs", "log directory")
 	flag.Parse()
 
 	var err error
@@ -61,12 +87,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	xe.Sync(Record{})
+	//xe.Sync(Record{})
 
-	if _, err = os.Stat(*logDir); err != nil {
-		os.Mkdir(*logDir, 0755)
+	if _, err = os.Stat(gcfg.LogDir); err != nil {
+		os.Mkdir(gcfg.LogDir, 0755)
 	}
-	tasks, err = loadTasks(*cfgFile)
+	if _, err = os.Stat(gcfg.SchedFile); err != nil {
+		ioutil.WriteFile(gcfg.SchedFile, []byte("[]"), 0644)
+	}
+	tasks, err := loadTasks(gcfg.SchedFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,20 +103,7 @@ func main() {
 
 	keeper = NewKeeper(tasks)
 
-	key, rec, err := keeper.NewRecord("test1")
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(key, rec)
-
-	if err := keeper.DoneRecord(key); err != nil {
-		log.Fatal(err)
-	}
-
-	cr, _ := create()
-	cr.Start()
-
 	initRoutes()
-	log.Printf("Listening on *:%d", *srvPort)
-	http.ListenAndServe(":"+strconv.Itoa(*srvPort), m)
+	log.Printf("Listening on *:%d", gcfg.ServerPort)
+	http.ListenAndServe(":"+strconv.Itoa(gcfg.ServerPort), m)
 }

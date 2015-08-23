@@ -46,7 +46,8 @@
 				};
 				$scope.save = function(){
 					$scope.task['environ'] = $scope.envVars;
-					$http.post("/api/tasks", $scope.task)
+					var reqCall = $scope.fresh ? $http.post : $http.put;
+					reqCall("/api/tasks", $scope.task)
 						.success(function(res){
 							ngNotify.set(res);
 							$scope.fresh = false;
