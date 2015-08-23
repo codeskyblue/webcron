@@ -19,5 +19,15 @@
             "GOPATH": "/User/skyblue"
         },
         "enabled": true
+    },
+    {
+        "name": "mysqldb-dump",
+        "schedule": "* * * * * *",
+        "command": "./go-cron -lsdk -sd",
+        "description": "这个是什么？",
+        "environ": {
+            "GOPATH": "/User/skyblue"
+        },
+        "enabled": true
     }
 ]

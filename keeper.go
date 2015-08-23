@@ -67,11 +67,9 @@ func (k *Keeper) NewRecord(name string) (key string, rec *Record, err error) {
 		return "", nil, fmt.Errorf("No such task has name: %s", name)
 	}
 
-	var count int
-	//cnt, err := xe.Where("name = ?", name).Count(Record{})
-	//log.Println(cnt, err)
-	//db.Model(Record{}).Where("name = ?", name).Count(&count)
-	idx := count
+	total, err := xe.Where("name = ?", name).Count(&Record{})
+	log.Println("NEW REC:", name, total, err)
+	idx := int(total)
 	rec = &Record{
 		Name:   name,
 		Index:  idx,

@@ -1,16 +1,32 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sync"
+	"syscall"
 	"time"
 
+	"github.com/go-xorm/xorm"
 	"github.com/robfig/cron"
+
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
+)
+
+var xe *xorm.Engine
+
+const (
+	TRIGGER_MANUAL   = "manual"
+	TRIGGER_SCHEDULE = "schedule"
 )
 
 type Task struct {
@@ -39,8 +55,12 @@ func (task *Task) Run(trigger string) (err error) {
 	return
 }
 
-func execute(rec *Record, command string, args []string) error {
+func execute(rec *Record, command string, args []string) (err error) {
 	start := time.Now()
+	defer func() {
+		rec.Duration = time.Since(start)
+		keeper.DoneRecord(rec.Key())
+	}()
 	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)
@@ -49,13 +69,22 @@ func execute(rec *Record, command string, args []string) error {
 	for k, v := range rec.T.Environ {
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
-	err := cmd.Run()
-	if err != nil { // FIXME(ssx): need extract exit code
-		rec.ExitCode = 1
+	if err = cmd.Start(); err != nil {
+		rec.ExitCode = 130
+		return err
 	}
-	rec.Duration = time.Since(start)
-	keeper.DoneRecord(rec.Key())
-	return err
+	// extrace exit_code from err
+	if err = cmd.Wait(); err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				log.Printf("Exit Status: %d", status.ExitStatus())
+				rec.ExitCode = status.ExitStatus()
+				return err
+			}
+		}
+		rec.ExitCode = 131
+	}
+	return nil
 }
 
 func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
@@ -72,19 +101,6 @@ func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
 	return c, wg
 }
 
-func start(c *cron.Cron, wg *sync.WaitGroup) {
-	c.Start()
-}
-
-func stop(c *cron.Cron, wg *sync.WaitGroup) {
-	println("Stopping")
-	c.Stop()
-	println("Waiting")
-	wg.Wait()
-	println("Exiting")
-	os.Exit(0)
-}
-
 func loadTasks(filename string) ([]Task, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -95,17 +111,37 @@ func loadTasks(filename string) ([]Task, error) {
 	return tasks, err
 }
 
-/*
-func main() {
-	flag.Parse()
+type Record struct {
+	Id        int64
+	Name      string `xorm:"unique(nt)"`
+	Index     int    `xorm:"unique(nt)"`
+	Trigger   string
+	ExitCode  int
+	CreatedAt time.Time `xorm:"created"`
+	Duration  time.Duration
+	T         Task `xorm:"-"` //`xorm:"task"` //FIXME(ssx): when use task will not get xorm work
 
-	c, wg := create()
-	go start(c, wg)
-
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
-
-	stop(c, wg)
+	Buffer  *bytes.Buffer `xorm:"-"`
+	Running bool          `xorm:"-"`
 }
-*/
+
+func (r *Record) Key() string {
+	return fmt.Sprintf("%s:%d", r.Name, r.Index)
+}
+
+func (r *Record) LogPath() string {
+	if r.Index == -1 {
+		return filepath.Join("logs", r.Name+"-latest.log")
+	}
+	return filepath.Join("logs", fmt.Sprintf("%s-%d.log", r.Name, r.Index))
+}
+
+func (r *Record) Done() (err error) {
+	err = ioutil.WriteFile(r.LogPath(), r.Buffer.Bytes(), 0644)
+	if err != nil {
+		return
+	}
+	r.Running = false
+	_, err = xe.InsertOne(r)
+	return
+}
