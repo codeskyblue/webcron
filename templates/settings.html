@@ -1,27 +1,4 @@
-<!DOCTYPE html>
-<html ng-app="cron">
-	<meta charset="utf-8">
-	<link href="bower_components/ng-notify/dist/ng-notify.min.css" rel="stylesheet">
-	<!--
-	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet">
-	-->
-	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet">
-	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet">
-	<link href="http://apps.bdimg.com/libs/bootstrap-glyphicons/1.0/css/bootstrap-glyphicons.css" rel="stylesheet">
-
-	<!-- bootstrap -->
-	<script src="bower_components/jquery/dist/jquery.min.js"></script>
-	<!-- angular -->
-	<script src="bower_components/angularjs/angular.min.js"></script>
-	<script src="bower_components/ng-notify/dist/ng-notify.min.js"></script>
-	<script src="bower_components/angular-scroll/angular-scroll.min.js"></script>
-	<script src="http://apps.bdimg.com/libs/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-	<!--
-	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
-	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-	<script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
-	-->
+[[template "header" .]]
 	<link href="/css/settings.css" rel="stylesheet">
 	<style>
 		ul.nav>li>a.active{
@@ -65,29 +42,6 @@
 				});
 			});
 		</script>
-	<body>
-		<div class="navbar navbar-default">
-			<div class="container">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="/">
-						WebCrontab
-					</a>
-				</div>
-				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-					<ul class="nav navbar-nav">
-						<li><a href="/">主页</a></li>
-					</ul>
-					<ul class="nav navbar-nav navbar-right">
-					</ul>
-				</div>
-			</div>
-		</div>
 
 		<div class="container" ng-controller="MainCtrl">
 			<div class="row">
@@ -195,5 +149,4 @@
 			</div>
 		  </div>
 		</div>
-	</body>
-</html>
+[[template "footer" .]]
