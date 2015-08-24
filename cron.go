@@ -12,9 +12,6 @@ import (
 	"time"
 
 	"github.com/go-xorm/xorm"
-
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var xe *xorm.Engine
@@ -113,7 +110,7 @@ type Record struct {
 	ExitCode  int           `json:"exit_code"`
 	CreatedAt JSONTime      `json:"created_at" xorm:"created"`
 	Duration  time.Duration `json:"duration"`
-	T         Task          `json:"task" xorm:"-"` //`xorm:"task"` //FIXME(ssx): when use task will not get xorm work
+	T         Task          `json:"task" xorm:"json task"`
 
 	Buffer  *bytes.Buffer     `json:"-" xorm:"-"`
 	Running bool              `json:"running" xorm:"-"`
