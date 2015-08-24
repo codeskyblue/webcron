@@ -43,12 +43,10 @@ func (k *Keeper) reloadCron() {
 	k.cr = cron.New()
 	for _, task := range k.Tasks() {
 		ta := task
-		//log.Println(ta, ta.Enabled)
 		if !ta.Enabled {
 			continue
 		}
 		taskFunc := func() {
-			log.Println(ta)
 			if err := ta.Run(TRIGGER_SCHEDULE); err != nil {
 				log.Println(ta.Name, err)
 			}
@@ -68,7 +66,7 @@ func (k *Keeper) NewRecord(name string) (key string, rec *Record, err error) {
 	}
 
 	total, err := xe.Where("name = ?", name).Count(&Record{})
-	log.Println("NEW REC:", name, total, err)
+	// log.Println("NEW REC:", name, total, err)
 	idx := int(total)
 	rec = &Record{
 		Name:   name,
@@ -81,6 +79,24 @@ func (k *Keeper) NewRecord(name string) (key string, rec *Record, err error) {
 	k.runRecs[key] = rec
 	k.crmu.Unlock()
 	return key, rec, nil
+}
+
+func (k *Keeper) GetRecord(name string, index int) (rec *Record, err error) {
+	k.tkmu.RLock()
+	defer k.tkmu.RUnlock()
+	for _, r := range k.runRecs {
+		if r.Name == name && r.Index == index {
+			return r, nil
+		}
+	}
+	rec = new(Record)
+	xe.ShowSQL = true
+	exists, err := xe.Where("`name` = ? AND `index` = ?", name, index).Get(rec)
+	xe.ShowSQL = false
+	if !exists {
+		return nil, fmt.Errorf("Record not exists")
+	}
+	return rec, nil
 }
 
 func (k *Keeper) DoneRecord(key string) error {
@@ -102,6 +118,14 @@ func (k *Keeper) ListRecords(limit int) (rs []*Record, err error) {
 		rs = append(rs, rec)
 	}
 	// Need to find in db
+	var doneRecords []*Record
+	if err = xe.Limit(limit).Desc("created_at").Find(&doneRecords); err != nil {
+		return nil, err
+	}
+	for _, rec := range doneRecords {
+		rs = append(rs, rec)
+	}
+	// log.Println(err, doneRecords)
 	return rs, nil
 }
 
@@ -146,6 +170,18 @@ func (k *Keeper) PutTask(name string, t Task) error {
 	k.tkmu.Unlock()
 	k.reloadCron()
 	return k.Save()
+}
+
+// Actually no created
+func (k *Keeper) GetOrCreateTask(name string) (task Task, created bool) {
+	k.tkmu.Lock()
+	defer k.tkmu.Unlock()
+	if tk, ok := k.tasks[name]; ok {
+		return tk, false
+	}
+	return Task{
+		Name: name,
+	}, true
 }
 
 func (k *Keeper) Tasks() []Task {

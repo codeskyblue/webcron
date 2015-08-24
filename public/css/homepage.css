@@ -22,14 +22,23 @@ ul.side-nav>li>a.active{
 	color: red;
 	font-weight: 800;
 }
-ul.side-nav>li{
+
+li.success {
+	border-left: 8px solid;
+	border-color: #3FA75F;
+}
+li.failure {
+	border-left: 8px solid;
+	border-color: red;
+}
+
+ul.side-nav li{
 	background-color: #fff;
 	margin: 5px 0;
-	border-left: 8px solid;
 	border-radius: 0;
-	border-color: #3FA75F;
 	padding: 10px;
 }
+
 .site-nav>li{
 	display: block;
 	width: 100%;
@@ -39,7 +48,7 @@ div.item-title h3{
 	color: #3FA75F;
 	margin: 0;
 	margin-bottom: 10px;
-	font-size: 16px;
+	font-size: 15px;
 	font-weight: 400;
 }
 div.item-title>a {
@@ -72,4 +81,19 @@ span.icon-status {
 	width: 1.1em;
 	display: block;
 	margin: .7em auto 1em;
+}
+
+span.glyphicon-remove {
+	color: red;
+}
+
+div.success {
+	background-color: green;
+}
+
+div.failure {
+	background-color: red;
+}
+div.failure>span.glyphicon-remove {
+	color: black;
 }

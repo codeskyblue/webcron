@@ -1,18 +1,7 @@
 [
     {
-        "name": "adf",
-        "schedule": "* * * * * *",
-        "command": "echo $YY haha",
-        "description": "alkj",
-        "environ": {
-            "GOPATH": "/User/skyblue",
-            "YY": "123"
-        },
-        "enabled": true
-    },
-    {
-        "name": "你好",
-        "schedule": "*/2 * * * * *",
+        "name": "hello",
+        "schedule": "*/5 * * * * *",
         "command": "echo world",
         "description": "这个是什么东西",
         "environ": {
@@ -22,7 +11,7 @@
     },
     {
         "name": "mysqldb-dump",
-        "schedule": "* * * * * *",
+        "schedule": "*/7 * * * * *",
         "command": "./go-cron -lsdk -sd",
         "description": "这个是什么？",
         "environ": {

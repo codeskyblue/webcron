@@ -1,10 +1,11 @@
 [[template "header" .]]
 <script>
-	var app = angular.module("cron", ["ngNotify", "duScroll"])
+	var app = angular.module("cron", ["ngNotify", "duScroll", "angular-humanize"])
 		.value('duScrollOffset', 30);
 	app.controller("MainCtrl", function($scope, $http, ngNotify, $document){
 		// ngNotify.set("Hi");
 		$scope.records = [[.Records]];
+		latest = $scope.latest = [[.Latest]];
 		console.log($scope.records);
 		var top = 400;
 		var duration = 2000;
@@ -26,10 +27,11 @@
 			</form>
 			<nav class="affix-top">
 				<ul class="nav side-nav">
-					<li ng-repeat="t in records | filter:search">
+					<li ng-class="t.exit_code ? 'failure' : 'success'" ng-repeat="t in records | filter:search">
 						<div class="item-title">
 							<a href="/{{t.name}}">
-								<h3>{{t.name}} {{t.running}}</h3>
+								<h3><span class="glyphicon" ng-class="t.exit_code ? 'glyphicon-remove' : 'glyphicon-ok'"></span>
+								{{t.exit_code}} {{t.name}} {{t.running}}</h3>
 							</a>
 							<span class="pull-right">
 								<a href="/{{t.name}}/builds/{{t.index}}">#{{t.index}}</a>
@@ -37,11 +39,11 @@
 						</div>
 						<div class="item-info">
 							<span class="glyphicon glyphicon-time"></span>
-							Duration: {{t.duration/1000000}} sec
+							Duration: {{t.duration/1000000000}} sec
 						</div>
 						<div class="item-info">
 							<span class="glyphicon glyphicon-calendar"></span>
-							Finished: {{t.created_at}}
+							Finished: {{t.created_at | humanizeRelativeTime}}
 						</div>
 					</li>
 				</ul>
@@ -50,11 +52,11 @@
 		<div class="col-md-9">
 			<div id="main-content" du-scroll-container>
 				<div>
-					<h2>mysqldump</h2>
+					<h2>{{latest.name}} <a class="btn btn-sm btn-default pull-right" href="/settings/{{latest.name}}">Setting</a></h2>
 					<div>
 						<section class="tile">
-							<div class="tile-status">
-								<span class="icon-status glyphicon glyphicon-ok"></span>
+							<div class="tile-status" ng-class="latest.exit_code ? 'failure' : 'success'">
+								<span class="icon-status glyphicon" ng-class="latest.exit_code ? 'glyphicon-remove' : 'glyphicon-ok'"></span>
 							</div>
 							<div class="tile-main">
 							</div>
@@ -64,8 +66,9 @@
 					</div>
 
 					<h2>Terminal</h2>
+					<pre id="terminal"></pre>
 				</div>
-				<div ng-repeat="t in records | filter:search" id="{{t.name}}" class="panel panel-info">
+				<!-- <div ng-repeat="t in records | filter:search" id="{{t.name}}" class="panel panel-info">
 					<div class="panel-heading">
 						<h4>{{t.name}} <small>{{t.task.schedule}}</small></h4>
 					</div>
@@ -75,7 +78,44 @@
 					<div class="panel-footer">
 						{{t.task.description}}
 					</div>
-				</div>
+				</div> -->
+
+				<script>
+					$(function(){
+						var httpsEnabled = window.location.protocol == "https:";
+						var url = (httpsEnabled ? 'wss://' : 'ws://') + window.location.host +'/ws/' + 
+								latest.name + '/'+latest.index;
+						var protocols = ["cron"];
+						var ws = new WebSocket(url, protocols);
+
+						ws.onopen = function(event){
+							console.log("nice connected");
+						}
+						ws.onmessage = function(event){
+							console.log(event);
+							var term = document.getElementById("terminal");
+							var p = JSON.parse(event.data);
+							switch(p.type){
+							case "stream":
+								term.innerText = term.innerText + p.body;
+								console.log(p.body);
+								break;
+							case "whole":
+								term.innerText = p.body;
+								break;
+							case "before":
+								term.innerText = p.body;
+								break;
+							}
+						}
+						ws.onclose = function(event){
+							console.log("Closed");
+						}
+						ws.onerror = function(event){
+							console.log("got a error", event)
+						}
+					});
+				</script>
 			</div>
 		</div>
 </div>

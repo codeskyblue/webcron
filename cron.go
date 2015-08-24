@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -24,6 +23,13 @@ const (
 	TRIGGER_MANUAL   = "manual"
 	TRIGGER_SCHEDULE = "schedule"
 )
+
+type JSONTime time.Time
+
+func (t JSONTime) MarshalJSON() ([]byte, error) {
+	stamp := fmt.Sprintf("%d", time.Time(t).Unix())
+	return []byte(stamp), nil
+}
 
 type Task struct {
 	Name        string            `json:"name"`
@@ -59,7 +65,11 @@ func execute(rec *Record, command string, args []string) (err error) {
 	}()
 	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
+	rec.wb = NewWriteBroadcaster()
+
 	cmd := exec.Command(command, args...)
+	cmd.Stdout = rec.wb
+	cmd.Stderr = rec.wb
 	// cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
 	// cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
 	for k, v := range rec.T.Environ {
@@ -73,7 +83,7 @@ func execute(rec *Record, command string, args []string) (err error) {
 	if err = cmd.Wait(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				log.Printf("Exit Status: %d", status.ExitStatus())
+				// log.Printf("Exit Status: %d", status.ExitStatus())
 				rec.ExitCode = status.ExitStatus()
 				return err
 			}
@@ -99,12 +109,13 @@ type Record struct {
 	Index     int           `json:"index" xorm:"unique(nt)"`
 	Trigger   string        `json:"trigger"`
 	ExitCode  int           `json:"exit_code"`
-	CreatedAt time.Time     `json:"created_at" xorm:"created"`
+	CreatedAt JSONTime      `json:"created_at" xorm:"created"`
 	Duration  time.Duration `json:"duration"`
 	T         Task          `json:"task" xorm:"-"` //`xorm:"task"` //FIXME(ssx): when use task will not get xorm work
 
-	Buffer  *bytes.Buffer `json:"-" xorm:"-"`
-	Running bool          `json:"running" xorm:"-"`
+	Buffer  *bytes.Buffer     `json:"-" xorm:"-"`
+	Running bool              `json:"running" xorm:"-"`
+	wb      *WriteBroadcaster `json:"-" xorm:"-"`
 }
 
 func (r *Record) Key() string {
@@ -118,8 +129,12 @@ func (r *Record) LogPath() string {
 	return filepath.Join("logs", fmt.Sprintf("%s-%d.log", r.Name, r.Index))
 }
 
+func (r *Record) LogData() ([]byte, error) {
+	return ioutil.ReadFile(r.LogPath())
+}
+
 func (r *Record) Done() (err error) {
-	err = ioutil.WriteFile(r.LogPath(), r.Buffer.Bytes(), 0644)
+	err = ioutil.WriteFile(r.LogPath(), r.wb.Bytes(), 0644)
 	if err != nil {
 		return
 	}

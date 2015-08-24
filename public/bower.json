@@ -19,6 +19,7 @@
     "angular-scroll": "~0.7.2",
     "bootstrap-switch": "~3.3.2",
     "jquery": "~2.1.4",
-    "bootstrap": "~3.3.5"
+    "bootstrap": "~3.3.5",
+    "angularjs-humanize": "~0.0.1"
   }
 }

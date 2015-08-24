@@ -10,10 +10,10 @@
 			var app = angular.module("cron", ["ngNotify", "duScroll"])
 				.value('duScrollOffset', 30);
 			app.controller("MainCtrl", function($scope, $http, ngNotify, $document){
-				$scope.name = "hi";
-				$scope.task = {};
-				$scope.fresh = true; // Is that newer
-				$scope.envVars = {GOPATH: "/User/skyblue"};
+				// $scope.name = ;
+				$scope.task = [[.Task]];
+				$scope.fresh = [[.Fresh]]; // Is that newer
+				// $scope.envVars = {GOPATH: "/User/skyblue"};
 				$scope.addEnv = function(e){
 					$scope.envVars[e.name] = e.value;
 					e.name = e.value = "";
