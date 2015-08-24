@@ -160,7 +160,7 @@ func main() {
 
 	var err error
 	// xe, err = xorm.NewEngine("sqlite3", "./test.db")
-	// xe, err = xorm.NewEngine("mysql", "cron:cron@10.246.13.180/cron?charset=utf8")
+	// xe, err = xorm.NewEngine("mysql", "cron:cron@tcp(10.246.13.180)/cron?charset=utf8")
 	xe, err = xorm.NewEngine("mysql", "root:@/cron?charset=utf8")
 	if err != nil {
 		log.Fatal(err)
