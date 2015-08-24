@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html ng-app="cron">
+	<meta charset="utf-8">
+	<link href="bower_components/ng-notify/dist/ng-notify.min.css" rel="stylesheet">
+	<!--
+	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="bower_components/bootstrap-switch/dist/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet">
+	-->
+	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.css" rel="stylesheet">
+	<link href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap-theme.min.css" rel="stylesheet">
+	<link href="http://apps.bdimg.com/libs/bootstrap-glyphicons/1.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+
+	<!-- bootstrap -->
+	<script src="bower_components/jquery/dist/jquery.min.js"></script>
+	<!-- angular -->
+	<script src="bower_components/angularjs/angular.min.js"></script>
+	<script src="bower_components/ng-notify/dist/ng-notify.min.js"></script>
+	<script src="bower_components/angular-scroll/angular-scroll.min.js"></script>
+	<script src="http://apps.bdimg.com/libs/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<!--
+	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+	-->
+	<link href="/css/settings.css" rel="stylesheet">
+	<style>
+		ul.nav>li>a.active{
+			color: red;
+			font-weight: 800;
+		}
+	</style>
+		<script>
+			var app = angular.module("cron", ["ngNotify", "duScroll"])
+				.value('duScrollOffset', 30);
+			app.controller("MainCtrl", function($scope, $http, ngNotify, $document){
+				$scope.name = "hi";
+				$scope.task = {};
+				$scope.fresh = true; // Is that newer
+				$scope.envVars = {GOPATH: "/User/skyblue"};
+				$scope.addEnv = function(e){
+					$scope.envVars[e.name] = e.value;
+					e.name = e.value = "";
+				};
+				$scope.envDel = function(name) {
+					delete($scope.envVars[name]);
+				};
+				$scope.save = function(){
+					$scope.task['environ'] = $scope.envVars;
+					var reqCall = $scope.fresh ? $http.post : $http.put;
+					reqCall("/api/tasks", $scope.task)
+						.success(function(res){
+							ngNotify.set(res);
+							$scope.fresh = false;
+						})
+						.error(function(res){
+							ngNotify.set(res, 'error');
+						});
+				};
+			});
+			$(function(){
+				$('[data-toggle="tooltip"]').tooltip();
+				$("#schedule-hint").click(function(){
+					$("#modal-schedule").modal();
+					return false;
+				});
+			});
+		</script>
+	<body>
+		<div class="navbar navbar-default">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="/">
+						WebCrontab
+					</a>
+				</div>
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li><a href="/">主页</a></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="container" ng-controller="MainCtrl">
+			<div class="row">
+				<div class="col-md-3">
+				</div>
+				<div class="col-md-9">
+					<div class="settings">
+						<form class="form" ng-submit="save()">
+							<h2 ng-hide="fresh">{{task.name}}</h2>
+							<section class="settings-section">
+								<h2 class="small-title">General Setting</h2>
+								<div class="form-group" ng-show="fresh">
+									<div class="row">
+										<div class="col-md-3">
+											<label>Name</label>
+											<input ng-model="task.name" class="input-name form-control" type="text" required>
+										</div>
+										<div class="col-md-9">
+											<label>Description</label>
+											<input ng-model="task.description" class="input-desc form-control" type="text">
+										</div>
+									</div>
+								</div>
+								<div class="form-group" ng-show="!fresh">
+									<label>Description</label>
+									<input ng-model="task.description" class="form-control" type="text">
+								</div>
+								<div class="form-group">
+									<label>Schedule
+										<a href="#" tabindex=-1 id="schedule-hint" data-toggle="tooltip" data-placement="top" title="[sec min hour day month week] click to see more">
+											<span class="glyphicon glyphicon-question-sign"></span>
+										</a>
+									</label>
+									<input ng-model="task.schedule" class="input-schedule form-control" type="text" required>
+								</div>
+								<div class="form-group">
+									<label>Command</label>
+									<textarea ng-model="task.command" class="form-control" required placeholder="Linux Shell or Windows Batch command ..."></textarea>
+								</div>
+							</section>
+							<section class="settings-section">
+								<h2 class="small-title">Environment Variables</h2>
+								<ul class="settings-list-envvars">
+									<li ng-repeat="(name, value) in envVars">
+										<div class="settings-envvar">
+											<div class="env-var-name">{{name}}</div>
+											<div class="env-var-value">
+												<input class="form-control" type="text" readonly="readonly" value="{{value}}">
+											</div>
+											<div class="env-var-action">
+													<a href="#" ng-click="envDel(name)">
+														<span class="glyphicon glyphicon-trash"></span>
+													</a>
+												<div class="tooltip">
+												</div>
+											</div>
+										</div>
+									</li>
+								</ul>
+								<div class="form">
+									<div class="form-group">
+										<div class="form-elem">
+											<input type="text" ng-model="newEnv.name" class="form-control env-name" placeholder="Name">
+										</div>
+										<div class="form-elem">
+											<input type="text" ng-model="newEnv.value" class="form-control env-value" placeholder="Value">
+										</div>
+										<div class="form-elem">
+											<button ng-disabled="!newEnv.name" ng-click="addEnv(newEnv)" class="btn btn-info env-button">Add</button>
+										</div>
+									</div>
+								</div>
+							</section>
+							<button class="btn btn-success">Save</button>
+						</form>
+					</div>
+					<div du-scroll-container>
+						<div ng-repeat="t in tasks" id="{{t.name}}" class="panel panel-info">
+							<div class="panel-heading">
+								<h4>{{t.name}} <small>{{t.schedule}}</small></h4>
+							</div>
+							<div class="panel-body">
+								Command: {{t.command}}
+							</div>
+							<div class="panel-footer">
+								{{t.description}}
+							</div>
+						</div>
+					</div>
+				</div>
+		</div>
+		<div class="modal fade" id="modal-schedule">
+		  <div class="modal-dialog">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Schedule Help</h4>
+			  </div>
+			  <div class="modal-body">
+				<p>* * * * * *  : every one second</p>
+				<p>*/5 * * * * *  : every 5 second</p>
+				<p>0 10 1 * * *  : 1 hour 10 minute every day</p>
+				<p>@hourly : every hour</p>
+			  </div>
+			</div>
+		  </div>
+		</div>
+	</body>
+</html>

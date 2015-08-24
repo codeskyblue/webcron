@@ -1,0 +1,69 @@
+/* css */
+.small-title {
+	font-size: 18px;
+	color: #63A4A3;
+}
+
+.env-value .env-name {
+	height: 32px;
+	font-size: 14px;
+	display: inline-block;
+	width: 100%;
+}
+
+.settings-envvar {
+	background-color: #F6F5F5;
+	height: 47px;
+	box-sizing: border-box;
+	margin: 0;
+	font-size: 16px;
+	line-height: 28px;
+}
+.settings-envvar div{
+	padding: .6em .5em;
+}
+.settings-list-envvars {
+	padding: 0;
+	color: #8d8d8d;
+}
+.settings-list-envvars>li {
+	list-style: none;
+}
+
+div.env-var-name {
+	width: 35%;
+	display: inline-block;
+}
+div.env-var-value {
+	width: 35%;
+	display: inline-block;
+	padding: .4em 0 .5em .8em;
+}
+.env-var-value>input {
+	color: #8d8d8d;
+}
+
+.env-var-action {
+	display: inline-block;
+	width: 16%;
+	position: relative;
+	float: right;
+}
+
+.env-button {
+	height: 34px;
+	border: 0px;
+}
+
+.form-elem {
+	width: 30%;
+	display: inline-block;
+}
+
+input.input-name {
+}
+input.input-desc {
+}
+
+input.input-schedule {
+}

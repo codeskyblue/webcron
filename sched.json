@@ -1,0 +1,33 @@
+[
+    {
+        "name": "adf",
+        "schedule": "* * * * * *",
+        "command": "echo $YY haha",
+        "description": "alkj",
+        "environ": {
+            "GOPATH": "/User/skyblue",
+            "YY": "123"
+        },
+        "enabled": true
+    },
+    {
+        "name": "你好",
+        "schedule": "*/2 * * * * *",
+        "command": "echo world",
+        "description": "这个是什么东西",
+        "environ": {
+            "GOPATH": "/User/skyblue"
+        },
+        "enabled": true
+    },
+    {
+        "name": "mysqldb-dump",
+        "schedule": "* * * * * *",
+        "command": "./go-cron -lsdk -sd",
+        "description": "这个是什么？",
+        "environ": {
+            "GOPATH": "/User/skyblue"
+        },
+        "enabled": true
+    }
+]

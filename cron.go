@@ -1,45 +1,90 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
+	"syscall"
+	"time"
 
+	"github.com/go-xorm/xorm"
 	"github.com/robfig/cron"
+
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
+)
+
+var xe *xorm.Engine
+
+const (
+	TRIGGER_MANUAL   = "manual"
+	TRIGGER_SCHEDULE = "schedule"
 )
 
 type Task struct {
-	Name        string `json:"name"`
-	Schedule    string `json:"schedule"`
-	Command     string `json:"command"`
-	Description string `json:"description"`
+	Name        string            `json:"name"`
+	Schedule    string            `json:"schedule"`
+	Command     string            `json:"command"`
+	Description string            `json:"description"`
+	Environ     map[string]string `json:"environ"`
+	Enabled     bool              `json:"enabled"`
 }
 
-func (task *Task) Run() (err error) {
+func (task *Task) Run(trigger string) (err error) {
+	_, rec, err := keeper.NewRecord(task.Name)
+	if err != nil {
+		return err
+	}
+	rec.Trigger = trigger
 	switch runtime.GOOS {
 	case "windows":
-		err = execute("cmd", []string{"/c", task.Command})
+		err = execute(rec, "cmd", []string{"/c", task.Command})
 	case "linux":
 		fallthrough
 	default:
-		err = execute("/bin/bash", []string{"-c", task.Command})
+		err = execute(rec, "/bin/bash", []string{"-c", task.Command})
 	}
 	return
 }
 
-func execute(command string, args []string) error {
-	return nil
-	log.Printf("executing: %s %s", command, strings.Join(args, " "))
+func execute(rec *Record, command string, args []string) (err error) {
+	start := time.Now()
+	defer func() {
+		rec.Duration = time.Since(start)
+		keeper.DoneRecord(rec.Key())
+	}()
+	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
+	cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
+	for k, v := range rec.T.Environ {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
+	if err = cmd.Start(); err != nil {
+		rec.ExitCode = 130
+		return err
+	}
+	// extrace exit_code from err
+	if err = cmd.Wait(); err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				log.Printf("Exit Status: %d", status.ExitStatus())
+				rec.ExitCode = status.ExitStatus()
+				return err
+			}
+		}
+		rec.ExitCode = 131
+	}
+	return nil
 }
 
 func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
@@ -53,32 +98,7 @@ func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
 	c := cron.New()
 	//println("new cron:", schedule)
 
-	for _, task := range tasks {
-		ta := task // make a copy, this is necessary
-		taskFunc := func() {
-			wg.Add(1)
-			defer wg.Done()
-			if err := ta.Run(); err != nil {
-				log.Println(ta.Name, err)
-			}
-		}
-		c.AddFunc(task.Schedule, taskFunc)
-	}
-
 	return c, wg
-}
-
-func start(c *cron.Cron, wg *sync.WaitGroup) {
-	c.Start()
-}
-
-func stop(c *cron.Cron, wg *sync.WaitGroup) {
-	println("Stopping")
-	c.Stop()
-	println("Waiting")
-	wg.Wait()
-	println("Exiting")
-	os.Exit(0)
 }
 
 func loadTasks(filename string) ([]Task, error) {
@@ -91,17 +111,37 @@ func loadTasks(filename string) ([]Task, error) {
 	return tasks, err
 }
 
-/*
-func main() {
-	flag.Parse()
+type Record struct {
+	Id        int64
+	Name      string `xorm:"unique(nt)"`
+	Index     int    `xorm:"unique(nt)"`
+	Trigger   string
+	ExitCode  int
+	CreatedAt time.Time `xorm:"created"`
+	Duration  time.Duration
+	T         Task `xorm:"-"` //`xorm:"task"` //FIXME(ssx): when use task will not get xorm work
 
-	c, wg := create()
-	go start(c, wg)
-
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
-
-	stop(c, wg)
+	Buffer  *bytes.Buffer `xorm:"-"`
+	Running bool          `xorm:"-"`
 }
-*/
+
+func (r *Record) Key() string {
+	return fmt.Sprintf("%s:%d", r.Name, r.Index)
+}
+
+func (r *Record) LogPath() string {
+	if r.Index == -1 {
+		return filepath.Join("logs", r.Name+"-latest.log")
+	}
+	return filepath.Join("logs", fmt.Sprintf("%s-%d.log", r.Name, r.Index))
+}
+
+func (r *Record) Done() (err error) {
+	err = ioutil.WriteFile(r.LogPath(), r.Buffer.Bytes(), 0644)
+	if err != nil {
+		return
+	}
+	r.Running = false
+	_, err = xe.InsertOne(r)
+	return
+}
