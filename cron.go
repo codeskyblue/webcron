@@ -60,18 +60,20 @@ func (task *Task) Run(trigger string) (err error) {
 func execute(rec *Record, command string, args []string) (err error) {
 	start := time.Now()
 	defer func() {
+		rec.wb.CloseWriters()
 		rec.Duration = time.Since(start)
 		keeper.DoneRecord(rec.Key())
 	}()
 	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	rec.wb = NewWriteBroadcaster()
+	rec.Running = true
 
 	cmd := exec.Command(command, args...)
 	cmd.Stdout = rec.wb
 	cmd.Stderr = rec.wb
-	// cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
-	// cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
+	// cmd.Stdout = io.MultiWriter(os.Stdout, rec.wb)
+	// cmd.Stderr = io.MultiWriter(os.Stderr, rec.wb)
 	for k, v := range rec.T.Environ {
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -128,7 +129,12 @@ func initRoutes() {
 		var buf = make([]byte, 1000)
 		for {
 			cnt, err := rd.Read(buf)
+			if err != nil && err == io.EOF {
+				wsend("finish", buf[:cnt])
+				break
+			}
 			if err != nil {
+				wsend("error", []byte(err.Error()))
 				break
 			}
 			wsend("stream", buf[:cnt])

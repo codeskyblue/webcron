@@ -1,12 +1,10 @@
 [
     {
         "name": "hello",
-        "schedule": "*/5 * * * * *",
-        "command": "echo world",
+        "schedule": "*/12 * * * * *",
+        "command": "scripts\\hello.exe",
         "description": "这个是什么东西",
-        "environ": {
-            "GOPATH": "/User/skyblue"
-        },
+        "environ": null,
         "enabled": true
     },
     {
