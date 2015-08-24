@@ -3,17 +3,17 @@
 	var app = angular.module("cron", ["ngNotify", "duScroll"])
 		.value('duScrollOffset', 30);
 	app.controller("MainCtrl", function($scope, $http, ngNotify, $document){
-		ngNotify.set("Hi");
-		$scope.records = [[.Tasks]];
+		// ngNotify.set("Hi");
+		$scope.records = [[.Records]];
 		console.log($scope.records);
 		var top = 400;
 		var duration = 2000;
 	});
 </script>
 
-<div ng-controller="MainCtrl">
+<div class="container" ng-controller="MainCtrl">
 	<div class="row">
-		<div class="col-md-2" id="left">
+		<div class="col-md-3" id="left">
 			<form id="search-form" class="form">
 				<div class="input-group">
 					<input type="input" ng-model="search" class="form-control" placeholder="Search for ..." autofocus>
@@ -27,25 +27,27 @@
 			<nav class="affix-top">
 				<ul class="nav side-nav">
 					<li ng-repeat="t in records | filter:search">
-						<a href="#{{t.name}}" du-smooth-scroll du-scrollspy>
-							<h3 class="item-title">{{t.name}}</h3>
-							<p class="pull-right">
-								<span># 1</span>
-							</p>
-							<p class="item-info">
-								<span class="glyphicon glyphicon-time"></span>
-								Duration: 7 min 26 sec
-							</p>
-							<p class="item-info">
-								<span class="glyphicon glyphicon-calendar"></span>
-								Finished: 3 days ago
-							</p>
-						</a>
+						<div class="item-title">
+							<a href="/{{t.name}}">
+								<h3>{{t.name}} {{t.running}}</h3>
+							</a>
+							<span class="pull-right">
+								<a href="/{{t.name}}/builds/{{t.index}}">#{{t.index}}</a>
+							</span>
+						</div>
+						<div class="item-info">
+							<span class="glyphicon glyphicon-time"></span>
+							Duration: {{t.duration/1000000}} sec
+						</div>
+						<div class="item-info">
+							<span class="glyphicon glyphicon-calendar"></span>
+							Finished: {{t.created_at}}
+						</div>
 					</li>
 				</ul>
 			</nav>
 		</div>
-		<div class="col-md-10">
+		<div class="col-md-9">
 			<div id="main-content" du-scroll-container>
 				<div>
 					<h2>mysqldump</h2>
@@ -65,13 +67,13 @@
 				</div>
 				<div ng-repeat="t in records | filter:search" id="{{t.name}}" class="panel panel-info">
 					<div class="panel-heading">
-						<h4>{{t.name}} <small>{{t.schedule}}</small></h4>
+						<h4>{{t.name}} <small>{{t.task.schedule}}</small></h4>
 					</div>
 					<div class="panel-body">
-						Command: {{t.command}}
+						Command: {{t.task.command}}
 					</div>
 					<div class="panel-footer">
-						{{t.description}}
+						{{t.task.description}}
 					</div>
 				</div>
 			</div>

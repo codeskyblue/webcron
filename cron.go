@@ -95,16 +95,16 @@ func loadTasks(filename string) ([]Task, error) {
 
 type Record struct {
 	Id        int64
-	Name      string `xorm:"unique(nt)"`
-	Index     int    `xorm:"unique(nt)"`
-	Trigger   string
-	ExitCode  int
-	CreatedAt time.Time `xorm:"created"`
-	Duration  time.Duration
-	T         Task `xorm:"-"` //`xorm:"task"` //FIXME(ssx): when use task will not get xorm work
+	Name      string        `json:"name" xorm:"unique(nt)"`
+	Index     int           `json:"index" xorm:"unique(nt)"`
+	Trigger   string        `json:"trigger"`
+	ExitCode  int           `json:"exit_code"`
+	CreatedAt time.Time     `json:"created_at" xorm:"created"`
+	Duration  time.Duration `json:"duration"`
+	T         Task          `json:"task" xorm:"-"` //`xorm:"task"` //FIXME(ssx): when use task will not get xorm work
 
-	Buffer  *bytes.Buffer `xorm:"-"`
-	Running bool          `xorm:"-"`
+	Buffer  *bytes.Buffer `json:"-" xorm:"-"`
+	Running bool          `json:"running" xorm:"-"`
 }
 
 func (r *Record) Key() string {

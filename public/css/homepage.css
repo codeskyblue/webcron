@@ -28,23 +28,26 @@ ul.side-nav>li{
 	border-left: 8px solid;
 	border-radius: 0;
 	border-color: #3FA75F;
+	padding: 10px;
 }
 .site-nav>li{
 	display: block;
 	width: 100%;
 	font-size: 14px;
 }
-.item-title {
-	width: 75%;
+div.item-title h3{
 	color: #3FA75F;
-	display: inline-block;
 	margin: 0;
 	margin-bottom: 10px;
 	font-size: 16px;
-	line-height: 22px;
 	font-weight: 400;
 }
-p.item-info {
+div.item-title>a {
+	width: 75%;
+	line-height: 22px;
+	display: inline-block;
+}
+div.item-info {
 	margin: 0px;
 	color: rgb(141, 141, 141);
 }

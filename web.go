@@ -30,6 +30,9 @@ func initRoutes() {
 		//ctx.Data["Tasks"] = template.JS(string(data))
 		data, _ := json.Marshal(keeper.Tasks())
 		ctx.Data["Tasks"] = template.JS(string(data))
+		rds, _ := keeper.ListRecords(10)
+		data, _ = json.Marshal(rds)
+		ctx.Data["Records"] = template.JS(string(data))
 		ctx.HTML(200, "homepage")
 	})
 
