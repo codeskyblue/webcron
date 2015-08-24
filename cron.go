@@ -4,19 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"sync"
 	"syscall"
 	"time"
 
 	"github.com/go-xorm/xorm"
-	"github.com/robfig/cron"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
@@ -64,8 +60,8 @@ func execute(rec *Record, command string, args []string) (err error) {
 	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	cmd := exec.Command(command, args...)
-	cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
-	cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
+	// cmd.Stdout = io.MultiWriter(os.Stdout, rec.Buffer)
+	// cmd.Stderr = io.MultiWriter(os.Stderr, rec.Buffer)
 	for k, v := range rec.T.Environ {
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
@@ -85,20 +81,6 @@ func execute(rec *Record, command string, args []string) (err error) {
 		rec.ExitCode = 131
 	}
 	return nil
-}
-
-func create() (cr *cron.Cron, wgr *sync.WaitGroup) {
-	/*var schedule string = os.Args[1]
-	var command string = os.Args[2]
-	var args []string = os.Args[3:len(os.Args)]
-
-	*/
-	wg := &sync.WaitGroup{}
-
-	c := cron.New()
-	//println("new cron:", schedule)
-
-	return c, wg
 }
 
 func loadTasks(filename string) ([]Task, error) {

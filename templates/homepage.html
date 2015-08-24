@@ -30,7 +30,7 @@
 						<a href="#{{t.name}}" du-smooth-scroll du-scrollspy>
 							<h3 class="item-title">{{t.name}}</h3>
 							<p class="pull-right">
-								<span class="glyphicon glyphicon-sunglasses">1</span>
+								<span># 1</span>
 							</p>
 							<p class="item-info">
 								<span class="glyphicon glyphicon-time"></span>
@@ -47,6 +47,22 @@
 		</div>
 		<div class="col-md-10">
 			<div id="main-content" du-scroll-container>
+				<div>
+					<h2>mysqldump</h2>
+					<div>
+						<section class="tile">
+							<div class="tile-status">
+								<span class="icon-status glyphicon glyphicon-ok"></span>
+							</div>
+							<div class="tile-main">
+							</div>
+							<div class="tile-additional">
+							</div>
+						</section>
+					</div>
+
+					<h2>Terminal</h2>
+				</div>
 				<div ng-repeat="t in records | filter:search" id="{{t.name}}" class="panel panel-info">
 					<div class="panel-heading">
 						<h4>{{t.name}} <small>{{t.schedule}}</small></h4>

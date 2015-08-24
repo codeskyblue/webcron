@@ -4,6 +4,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -27,6 +28,8 @@ func initRoutes() {
 	m.Get("/", func(ctx *macaron.Context) {
 		//data, _ := json.Marshal(tasks)
 		//ctx.Data["Tasks"] = template.JS(string(data))
+		data, _ := json.Marshal(keeper.Tasks())
+		ctx.Data["Tasks"] = template.JS(string(data))
 		ctx.HTML(200, "homepage")
 	})
 
@@ -83,12 +86,12 @@ func main() {
 	flag.Parse()
 
 	var err error
-	//xe, err = xorm.NewEngine("sqlite3", "./test.db")
-	xe, err = xorm.NewEngine("mysql", "root:@/cron?charset=utf8")
+	xe, err = xorm.NewEngine("sqlite3", "./test.db")
+	// xe, err = xorm.NewEngine("mysql", "root:@/cron?charset=utf8")
 	if err != nil {
 		log.Fatal(err)
 	}
-	//xe.Sync(Record{})
+	xe.Sync2(Record{})
 
 	if _, err = os.Stat(gcfg.LogDir); err != nil {
 		os.Mkdir(gcfg.LogDir, 0755)

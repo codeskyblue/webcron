@@ -48,3 +48,25 @@ p.item-info {
 	margin: 0px;
 	color: rgb(141, 141, 141);
 }
+
+section.tile {
+	position: relative;
+	height: 145px;
+	background-color: #FAFAF8;
+}
+
+div.tile-status {
+	position: absolute;
+	background-color: #3FA75F;
+	display: block;
+	width: 2.5em;
+	height: 100%;
+	border-top-left-radius: 4px;
+	border-bottom-left-radius: 4px;
+}
+
+span.icon-status {
+	width: 1.1em;
+	display: block;
+	margin: .7em auto 1em;
+}
