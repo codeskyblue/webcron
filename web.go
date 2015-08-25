@@ -234,6 +234,7 @@ func main() {
 	initRoutes()
 	log.Printf("Listening on *:%d", gcfg.ServerPort)
 	http.Handle("/", m)
+	//http.Handle("/-/", http.StripPrefix("/-/", http.FileServer(http.Dir("public"))))
 	if err := http.ListenAndServe(":"+strconv.Itoa(gcfg.ServerPort), nil); err != nil {
 		log.Fatal(err)
 	}
