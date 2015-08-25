@@ -1,12 +1,10 @@
 [
     {
         "name": "hello",
-        "schedule": "* * * * * *",
-        "command": "echo hello world",
+        "schedule": "*/20 * * * * *",
+        "command": "for i in $(seq 10)\ndo\n    echo hello world: 10-$i\n    sleep 1\ndone",
         "description": "你好",
-        "environ": {
-            "YY": "123"
-        },
+        "environ": {},
         "enabled": true
     }
 ]

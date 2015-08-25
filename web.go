@@ -171,6 +171,7 @@ func initRoutes() {
 			return
 		}
 		currBody, rd := rec.wb.NewBufReader(r.RemoteAddr)
+		defer rd.Close()
 		wsend("before", currBody)
 		var buf = make([]byte, 1000)
 		for {

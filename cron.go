@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -67,10 +69,10 @@ func execute(rec *Record, command string, args []string) (err error) {
 	rec.Running = true
 
 	cmd := exec.Command(command, args...)
-	cmd.Stdout = rec.wb
-	cmd.Stderr = rec.wb
-	// cmd.Stdout = io.MultiWriter(os.Stdout, rec.wb)
-	// cmd.Stderr = io.MultiWriter(os.Stderr, rec.wb)
+	//cmd.Stdout = rec.wb
+	//cmd.Stderr = rec.wb
+	cmd.Stdout = io.MultiWriter(os.Stdout, rec.wb)
+	cmd.Stderr = io.MultiWriter(os.Stderr, rec.wb)
 	for k, v := range rec.T.Environ {
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
