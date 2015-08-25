@@ -1,13 +1,5 @@
 [
     {
-        "name": "hello",
-        "schedule": "*/12 * * * * *",
-        "command": "scripts\\hello.exe",
-        "description": "这个是什么东西",
-        "environ": null,
-        "enabled": true
-    },
-    {
         "name": "mysqldb-dump",
         "schedule": "*/7 * * * * *",
         "command": "./go-cron -lsdk -sd",
@@ -15,6 +7,14 @@
         "environ": {
             "GOPATH": "/User/skyblue"
         },
+        "enabled": true
+    },
+    {
+        "name": "hello",
+        "schedule": "*/12 * * * * *",
+        "command": "scripts\\hello.exe -e 2",
+        "description": "这个是什么东西",
+        "environ": {},
         "enabled": true
     }
 ]

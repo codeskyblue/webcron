@@ -43,7 +43,8 @@ func initRoutes() {
 	m.Get("/", func(ctx *macaron.Context) {
 		// data, _ := json.Marshal(keeper.Tasks())
 		// ctx.Data["Tasks"] = template.JS(string(data))
-		rds, _ := keeper.ListRecords(8)
+		// rds, _ := keeper.ListRecords(8)
+		rds, _ := keeper.ListUniqRecords()
 		// data, _ := json.Marshal(rds)
 		if len(rds) > 0 {
 			latest := rds[0]
@@ -160,8 +161,8 @@ func main() {
 
 	var err error
 	// xe, err = xorm.NewEngine("sqlite3", "./test.db")
-	// xe, err = xorm.NewEngine("mysql", "cron:cron@tcp(10.246.13.180)/cron?charset=utf8")
-	xe, err = xorm.NewEngine("mysql", "root:@/cron?charset=utf8")
+	xe, err = xorm.NewEngine("mysql", "cron:cron@tcp(10.246.13.180:3306)/cron?charset=utf8")
+	// xe, err = xorm.NewEngine("mysql", "root:@/cron?charset=utf8")
 	if err != nil {
 		log.Fatal(err)
 	}
