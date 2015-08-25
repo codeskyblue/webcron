@@ -15,15 +15,15 @@
 package macaron
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/base64"
-	"fmt"
+	"crypto/md5"
+	"encoding/hex"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -42,25 +42,28 @@ type Locale interface {
 	Tr(string, ...interface{}) string
 }
 
-// Body is the request's body.
+// RequestBody represents a request body.
 type RequestBody struct {
 	reader io.ReadCloser
 }
 
+// Bytes reads and returns content of request body in bytes.
 func (rb *RequestBody) Bytes() ([]byte, error) {
 	return ioutil.ReadAll(rb.reader)
 }
 
+// String reads and returns content of request body in string.
 func (rb *RequestBody) String() (string, error) {
 	data, err := rb.Bytes()
 	return string(data), err
 }
 
+// ReadCloser returns a ReadCloser for request body.
 func (rb *RequestBody) ReadCloser() io.ReadCloser {
 	return rb.reader
 }
 
-// A Request represents an HTTP request received by a server or to be sent by a client.
+// Request represents an HTTP request received by a server or to be sent by a client.
 type Request struct {
 	*http.Request
 }
@@ -145,13 +148,12 @@ func (ctx *Context) renderHTML(status int, setName, tplName string, data ...inte
 	if ctx.Render == nil {
 		panic("renderer middleware hasn't been registered")
 	}
-	if len(data) == 0 {
+	if len(data) <= 0 {
 		ctx.Render.HTMLSet(status, setName, tplName, ctx.Data)
-	} else {
+	} else if len(data) == 1 {
 		ctx.Render.HTMLSet(status, setName, tplName, data[0])
-		if len(data) > 1 {
-			ctx.Render.HTMLSet(status, setName, tplName, data[0], data[1].(HTMLOptions))
-		}
+	} else {
+		ctx.Render.HTMLSet(status, setName, tplName, data[0], data[1].(HTMLOptions))
 	}
 }
 
@@ -174,19 +176,38 @@ func (ctx *Context) Redirect(location string, status ...int) {
 	http.Redirect(ctx.Resp, ctx.Req.Request, location, code)
 }
 
-// Query querys form parameter.
-func (ctx *Context) Query(name string) string {
-	if ctx.Req.Form == nil {
+// Maximum amount of memory to use when parsing a multipart form.
+// Set this to whatever value you prefer; default is 10 MB.
+var MaxMemory = int64(1024 * 1024 * 10)
+
+func (ctx *Context) parseForm() {
+	if ctx.Req.Form != nil {
+		return
+	}
+
+	contentType := ctx.Req.Header.Get("Content-Type")
+	if (ctx.Req.Method == "POST" || ctx.Req.Method == "PUT") &&
+		len(contentType) > 0 && strings.Contains(contentType, "multipart/form-data") {
+		ctx.Req.ParseMultipartForm(MaxMemory)
+	} else {
 		ctx.Req.ParseForm()
 	}
+}
+
+// Query querys form parameter.
+func (ctx *Context) Query(name string) string {
+	ctx.parseForm()
 	return ctx.Req.Form.Get(name)
+}
+
+// QueryTrim querys and trims spaces form parameter.
+func (ctx *Context) QueryTrim(name string) string {
+	return strings.TrimSpace(ctx.Query(name))
 }
 
 // QueryStrings returns a list of results by given query name.
 func (ctx *Context) QueryStrings(name string) []string {
-	if ctx.Req.Form == nil {
-		ctx.Req.ParseForm()
-	}
+	ctx.parseForm()
 
 	vals, ok := ctx.Req.Form[name]
 	if !ok {
@@ -210,24 +231,55 @@ func (ctx *Context) QueryInt64(name string) int64 {
 	return com.StrTo(ctx.Query(name)).MustInt64()
 }
 
+// QueryFloat64 returns query result in float64 type.
+func (ctx *Context) QueryFloat64(name string) float64 {
+	v, _ := strconv.ParseFloat(ctx.Query(name), 64)
+	return v
+}
+
 // Params returns value of given param name.
+// e.g. ctx.Params(":uid") or ctx.Params("uid")
 func (ctx *Context) Params(name string) string {
+	if len(name) == 0 {
+		return ""
+	}
+	if len(name) > 1 && name[0] != ':' {
+		name = ":" + name
+	}
 	return ctx.params[name]
 }
 
+// SetParams sets value of param with given name.
+func (ctx *Context) SetParams(name, val string) {
+	if !strings.HasPrefix(name, ":") {
+		name = ":" + name
+	}
+	ctx.params[name] = val
+}
+
 // ParamsEscape returns escapred params result.
+// e.g. ctx.ParamsEscape(":uname")
 func (ctx *Context) ParamsEscape(name string) string {
 	return template.HTMLEscapeString(ctx.Params(name))
 }
 
 // ParamsInt returns params result in int type.
+// e.g. ctx.ParamsInt(":uid")
 func (ctx *Context) ParamsInt(name string) int {
 	return com.StrTo(ctx.Params(name)).MustInt()
 }
 
 // ParamsInt64 returns params result in int64 type.
+// e.g. ctx.ParamsInt64(":uid")
 func (ctx *Context) ParamsInt64(name string) int64 {
 	return com.StrTo(ctx.Params(name)).MustInt64()
+}
+
+// ParamsFloat64 returns params result in int64 type.
+// e.g. ctx.ParamsFloat64(":uid")
+func (ctx *Context) ParamsFloat64(name string) float64 {
+	v, _ := strconv.ParseFloat(ctx.Params(name), 64)
+	return v
 }
 
 // GetFile returns information about user upload file by given form field name.
@@ -236,10 +288,11 @@ func (ctx *Context) GetFile(name string) (multipart.File, *multipart.FileHeader,
 }
 
 // SetCookie sets given cookie value to response header.
+// FIXME: IE support? http://golanghome.com/post/620#reply2
 func (ctx *Context) SetCookie(name string, value string, others ...interface{}) {
 	cookie := http.Cookie{}
 	cookie.Name = name
-	cookie.Value = value
+	cookie.Value = url.QueryEscape(value)
 
 	if len(others) > 0 {
 		switch v := others[0].(type) {
@@ -252,23 +305,19 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 		}
 	}
 
-	// default "/"
+	cookie.Path = "/"
 	if len(others) > 1 {
 		if v, ok := others[1].(string); ok && len(v) > 0 {
 			cookie.Path = v
 		}
-	} else {
-		cookie.Path = "/"
 	}
 
-	// default empty
 	if len(others) > 2 {
 		if v, ok := others[2].(string); ok && len(v) > 0 {
 			cookie.Domain = v
 		}
 	}
 
-	// default empty
 	if len(others) > 3 {
 		switch v := others[3].(type) {
 		case bool:
@@ -280,7 +329,6 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 		}
 	}
 
-	// default false. for session cookie default true
 	if len(others) > 4 {
 		if v, ok := others[4].(bool); ok && v {
 			cookie.HttpOnly = true
@@ -296,7 +344,8 @@ func (ctx *Context) GetCookie(name string) string {
 	if err != nil {
 		return ""
 	}
-	return cookie.Value
+	val, _ := url.QueryUnescape(cookie.Value)
+	return val
 }
 
 // GetCookieInt returns cookie result in int type.
@@ -307,6 +356,12 @@ func (ctx *Context) GetCookieInt(name string) int {
 // GetCookieInt64 returns cookie result in int64 type.
 func (ctx *Context) GetCookieInt64(name string) int64 {
 	return com.StrTo(ctx.GetCookie(name)).MustInt64()
+}
+
+// GetCookieFloat64 returns cookie result in float64 type.
+func (ctx *Context) GetCookieFloat64(name string) float64 {
+	v, _ := strconv.ParseFloat(ctx.GetCookie(name), 64)
+	return v
 }
 
 var defaultCookieSecret string
@@ -327,41 +382,40 @@ func (ctx *Context) GetSecureCookie(key string) (string, bool) {
 }
 
 // SetSuperSecureCookie sets given cookie value to response header with secret string.
-func (ctx *Context) SetSuperSecureCookie(Secret, name, value string, others ...interface{}) {
-	vs := base64.URLEncoding.EncodeToString([]byte(value))
-	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-	h := hmac.New(sha1.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
-	sig := fmt.Sprintf("%02x", h.Sum(nil))
-	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
-	ctx.SetCookie(name, cookie, others...)
+func (ctx *Context) SetSuperSecureCookie(secret, name, value string, others ...interface{}) {
+	m := md5.Sum([]byte(secret))
+	secret = hex.EncodeToString(m[:])
+	text, err := com.AESEncrypt([]byte(secret), []byte(value))
+	if err != nil {
+		panic("error encrypting cookie: " + err.Error())
+	}
+	ctx.SetCookie(name, hex.EncodeToString(text), others...)
 }
 
 // GetSuperSecureCookie returns given cookie value from request header with secret string.
-func (ctx *Context) GetSuperSecureCookie(Secret, key string) (string, bool) {
+func (ctx *Context) GetSuperSecureCookie(secret, key string) (string, bool) {
 	val := ctx.GetCookie(key)
 	if val == "" {
 		return "", false
 	}
 
-	parts := strings.SplitN(val, "|", 3)
-
-	if len(parts) != 3 {
+	data, err := hex.DecodeString(val)
+	if err != nil {
 		return "", false
 	}
 
-	vs := parts[0]
-	timestamp := parts[1]
-	sig := parts[2]
+	m := md5.Sum([]byte(secret))
+	secret = hex.EncodeToString(m[:])
+	text, err := com.AESDecrypt([]byte(secret), data)
+	return string(text), err == nil
+}
 
-	h := hmac.New(sha1.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
-
-	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
-		return "", false
-	}
-	res, _ := base64.URLEncoding.DecodeString(vs)
-	return string(res), true
+func (ctx *Context) setRawContentHeader() {
+	ctx.Resp.Header().Set("Content-Description", "Raw content")
+	ctx.Resp.Header().Set("Content-Type", "text/plain")
+	ctx.Resp.Header().Set("Expires", "0")
+	ctx.Resp.Header().Set("Cache-Control", "must-revalidate")
+	ctx.Resp.Header().Set("Pragma", "public")
 }
 
 // ServeContent serves given content to response.
@@ -373,12 +427,33 @@ func (ctx *Context) ServeContent(name string, r io.ReadSeeker, params ...interfa
 			modtime = v
 		}
 	}
-	ctx.Resp.Header().Set("Content-Description", "Raw content")
-	ctx.Resp.Header().Set("Content-Type", "text/plain")
-	ctx.Resp.Header().Set("Expires", "0")
-	ctx.Resp.Header().Set("Cache-Control", "must-revalidate")
-	ctx.Resp.Header().Set("Pragma", "public")
+
+	ctx.setRawContentHeader()
 	http.ServeContent(ctx.Resp, ctx.Req.Request, name, modtime, r)
+}
+
+// ServeFileContent serves given file as content to response.
+func (ctx *Context) ServeFileContent(file string, names ...string) {
+	var name string
+	if len(names) > 0 {
+		name = names[0]
+	} else {
+		name = path.Base(file)
+	}
+
+	f, err := os.Open(file)
+	if err != nil {
+		if Env == PROD {
+			http.Error(ctx.Resp, "Internal Server Error", 500)
+		} else {
+			http.Error(ctx.Resp, err.Error(), 500)
+		}
+		return
+	}
+	defer f.Close()
+
+	ctx.setRawContentHeader()
+	http.ServeContent(ctx.Resp, ctx.Req.Request, name, time.Now(), f)
 }
 
 // ServeFile serves given file to response.

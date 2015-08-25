@@ -24,12 +24,15 @@ import (
 	"strings"
 
 	"github.com/Unknwon/com"
+	"gopkg.in/ini.v1"
 
 	"github.com/Unknwon/macaron/inject"
 )
 
+const _VERSION = "0.6.6.0728"
+
 func Version() string {
-	return "0.4.6.1204"
+	return _VERSION
 }
 
 // Handler can be any callable function.
@@ -80,11 +83,10 @@ func NewWithLogger(out io.Writer) *Macaron {
 	m.Router.m = m
 	m.Map(m.logger)
 	m.Map(defaultReturnHandler())
-	m.notFound = func(resp http.ResponseWriter, req *http.Request) {
-		c := m.createContext(resp, req)
-		c.handlers = append(c.handlers, http.NotFound)
-		c.run()
-	}
+	m.NotFound(http.NotFound)
+	m.InternalServerError(func(rw http.ResponseWriter, err error) {
+		http.Error(rw, err.Error(), 500)
+	})
 	return m
 }
 
@@ -218,9 +220,9 @@ func (m *Macaron) SetURLPrefix(prefix string) {
 //                \/              \/    \/          \/     \/
 
 const (
-	DEV  string = "development"
-	PROD string = "production"
-	TEST string = "test"
+	DEV  = "development"
+	PROD = "production"
+	TEST = "test"
 )
 
 var (
@@ -233,6 +235,9 @@ var (
 
 	// Flash applies to current request.
 	FlashNow bool
+
+	// Configuration convention object.
+	cfg *ini.File
 )
 
 func setENV(e string) {
@@ -243,9 +248,25 @@ func setENV(e string) {
 
 func init() {
 	setENV(os.Getenv("MACARON_ENV"))
+
 	var err error
 	Root, err = os.Getwd()
 	if err != nil {
-		panic(err)
+		panic("error getting work directory: " + err.Error())
 	}
+}
+
+// SetConfig sets data sources for configuration.
+func SetConfig(source interface{}, others ...interface{}) (_ *ini.File, err error) {
+	cfg, err = ini.Load(source, others...)
+	return Config(), err
+}
+
+// Config returns configuration convention object.
+// It returns an empty object if there is no one available.
+func Config() *ini.File {
+	if cfg == nil {
+		return ini.Empty()
+	}
+	return cfg
 }

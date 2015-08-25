@@ -1,4 +1,5 @@
 // Copyright 2013 Martini Authors
+// Copyright 2013 oxtoacart
 // Copyright 2014 Unknwon
 //
 // Licensed under the Apache License, Version 2.0 (the "License"): you may
@@ -32,9 +33,38 @@ import (
 	"time"
 
 	"github.com/Unknwon/com"
-
-	"github.com/Unknwon/macaron/bpool"
 )
+
+// BufferPool implements a pool of bytes.Buffers in the form of a bounded channel.
+type BufferPool struct {
+	c chan *bytes.Buffer
+}
+
+// NewBufferPool creates a new BufferPool bounded to the given size.
+func NewBufferPool(size int) (bp *BufferPool) {
+	return &BufferPool{
+		c: make(chan *bytes.Buffer, size),
+	}
+}
+
+// Get gets a Buffer from the BufferPool, or creates a new one if none are available
+// in the pool.
+func (bp *BufferPool) Get() (b *bytes.Buffer) {
+	select {
+	case b = <-bp.c:
+	// reuse existing buffer
+	default:
+		// create new buffer
+		b = bytes.NewBuffer([]byte{})
+	}
+	return
+}
+
+// Put returns the given Buffer to the BufferPool.
+func (bp *BufferPool) Put(b *bytes.Buffer) {
+	b.Reset()
+	bp.c <- b
+}
 
 const (
 	ContentType    = "Content-Type"
@@ -50,7 +80,7 @@ const (
 
 var (
 	// Provides a temporary buffer to execute templates into and catch errors.
-	bufpool = bpool.NewBufferPool(64)
+	bufpool = NewBufferPool(64)
 
 	// Included helper functions for use when rendering html
 	helperFuncs = template.FuncMap{
@@ -119,6 +149,7 @@ type (
 
 	Render interface {
 		http.ResponseWriter
+		SetResponseWriter(http.ResponseWriter)
 		RW() http.ResponseWriter
 
 		JSON(int, interface{})
@@ -291,7 +322,7 @@ func (ts *templateSet) GetDir(name string) string {
 	return ts.dirs[name]
 }
 
-func prepareOptions(options []RenderOptions) RenderOptions {
+func prepareRenderOptions(options []RenderOptions) RenderOptions {
 	var opt RenderOptions
 	if len(options) > 0 {
 		opt = options[0]
@@ -307,9 +338,6 @@ func prepareOptions(options []RenderOptions) RenderOptions {
 	if len(opt.HTMLContentType) == 0 {
 		opt.HTMLContentType = ContentHTML
 	}
-	// if opt.TemplateFileSystem == nil {
-	// 	opt.TemplateFileSystem = newTemplateFileSystem(opt)
-	// }
 
 	return opt
 }
@@ -374,11 +402,11 @@ func renderHandler(opt RenderOptions, tplSets []string) Handler {
 // If MACARON_ENV is set to "" or "development" then templates will be recompiled on every request. For more performance, set the
 // MACARON_ENV environment variable to "production".
 func Renderer(options ...RenderOptions) Handler {
-	return renderHandler(prepareOptions(options), []string{})
+	return renderHandler(prepareRenderOptions(options), []string{})
 }
 
 func Renderers(options RenderOptions, tplSets ...string) Handler {
-	return renderHandler(prepareOptions([]RenderOptions{options}), tplSets)
+	return renderHandler(prepareRenderOptions([]RenderOptions{options}), tplSets)
 }
 
 type TplRender struct {
@@ -390,13 +418,19 @@ type TplRender struct {
 	startTime time.Time
 }
 
+func (r *TplRender) SetResponseWriter(rw http.ResponseWriter) {
+	r.ResponseWriter = rw
+}
+
 func (r *TplRender) RW() http.ResponseWriter {
 	return r.ResponseWriter
 }
 
 func (r *TplRender) JSON(status int, v interface{}) {
-	var result []byte
-	var err error
+	var (
+		result []byte
+		err    error
+	)
 	if r.Opt.IndentJSON {
 		result, err = json.MarshalIndent(v, "", "  ")
 	} else {

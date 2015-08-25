@@ -1,3 +1,7 @@
+// Copyright 2015 The Xorm Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package xorm
 
 import (
@@ -892,8 +896,8 @@ func (db *postgres) DropIndexSql(tableName string, index *core.Index) string {
 	return fmt.Sprintf("DROP INDEX %v", quote(idxName))
 }
 
-func (db *postgres) IsColumnExist(tableName string, col *core.Column) (bool, error) {
-	args := []interface{}{tableName, col.Name}
+func (db *postgres) IsColumnExist(tableName, colName string) (bool, error) {
+	args := []interface{}{tableName, colName}
 	query := "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = $1" +
 		" AND column_name = $2"
 	rows, err := db.DB().Query(query, args...)

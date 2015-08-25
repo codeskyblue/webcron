@@ -1,11 +1,11 @@
 Macaron [![Build Status](https://drone.io/github.com/Unknwon/macaron/status.png)](https://drone.io/github.com/Unknwon/macaron/latest) [![](http://gocover.io/_badge/github.com/Unknwon/macaron)](http://gocover.io/github.com/Unknwon/macaron)
 =======================
 
-![Macaron Logo](macaronlogo.png)
+![Macaron Logo](https://raw.githubusercontent.com/Unknwon/macaron/master/macaronlogo.png)
 
 Package macaron is a high productive and modular design web framework in Go.
 
-##### Current version: 0.4.5
+##### Current version: 0.6.6
 
 ## Getting Started
 
@@ -41,12 +41,15 @@ func main() {
 - Handy dependency injection powered by [inject](https://github.com/codegangsta/inject).
 - Better router layer and less reflection make faster speed.
 
-## Middlewares 
+## Middlewares
 
 Middlewares allow you easily plugin/unplugin features for your Macaron applications.
 
 There are already many [middlewares](https://github.com/macaron-contrib) to simplify your work:
 
+- gzip - Gzip compression to all requests
+- render - Go template engine
+- static - Serves static files
 - [binding](https://github.com/macaron-contrib/binding) - Request data binding and validation
 - [i18n](https://github.com/macaron-contrib/i18n) - Internationalization and Localization
 - [cache](https://github.com/macaron-contrib/cache) - Cache manager
@@ -67,20 +70,22 @@ There are already many [middlewares](https://github.com/macaron-contrib) to simp
 
 - [Gogs](https://github.com/gogits/gogs): Go Git Service
 - [Gogs Web](https://github.com/gogits/gogsweb): Gogs official website
+- [Go Walker](https://gowalker.org): Go online API documentation
 - [Switch](https://github.com/gpmgo/switch): Gopm registry
 - [YouGam](http://yougam.com): Online Forum
 - [Car Girl](http://qcnl.gzsy.com/): Online campaign
+- [Critical Stack Intel](https://intel.criticalstack.com/): A 100% free intel marketplace from Critical Stack, Inc.
 
 ## Getting Help
 
 - [API Reference](https://gowalker.org/github.com/Unknwon/macaron)
 - [Documentation](http://macaron.gogs.io)
 - [FAQs](http://macaron.gogs.io/docs/faqs)
+- [![Join the chat at https://gitter.im/Unknwon/macaron](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Unknwon/macaron?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Credits
 
 - Basic design of [Martini](https://github.com/go-martini/martini).
-- Router layer of [beego](https://github.com/astaxie/beego).
 - Logo is modified by [@insionng](https://github.com/insionng) based on [Tribal Dragon](http://xtremeyamazaki.deviantart.com/art/Tribal-Dragon-27005087).
 
 ## License
