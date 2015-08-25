@@ -7,7 +7,7 @@
     "include": [
         "\\.(go|py|php|java|cpp|h|rb)$"
     ],
-    "command": "go build && webcrontab",
+    "command": "go build",
     "env": {
         "POWERD_BY": "github.com/codeskyblue/fswatch"
     },

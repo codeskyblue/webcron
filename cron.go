@@ -103,7 +103,7 @@ func loadTasks(filename string) ([]Task, error) {
 }
 
 type Record struct {
-	Id        int64
+	Id        int64         `json:"id"`
 	Name      string        `json:"name" xorm:"unique(nt)"`
 	Index     int           `json:"index" xorm:"unique(nt)"`
 	Trigger   string        `json:"trigger"`

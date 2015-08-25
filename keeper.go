@@ -141,14 +141,18 @@ func (k *Keeper) ListUniqRecords() (rs []*Record, err error) {
 	return rs, nil
 }
 
-func (k *Keeper) ListRecords(limit int) (rs []*Record, err error) {
+func (k *Keeper) ListRecords(name string, limit int) (rs []*Record, err error) {
 	rs = make([]*Record, 0)
 	for _, rec := range k.runRecs {
+		if rec.Name != name {
+			continue
+		}
 		rs = append(rs, rec)
 	}
 	// Need to find in db
+	limit -= len(rs)
 	var doneRecords []*Record
-	if err = xe.Limit(limit).Desc("created_at").Find(&doneRecords); err != nil {
+	if err = xe.Where("`name` = ?", name).Limit(limit).Desc("created_at").Find(&doneRecords); err != nil {
 		return nil, err
 	}
 	for _, rec := range doneRecords {

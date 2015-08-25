@@ -4,6 +4,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -48,8 +49,34 @@ func initRoutes() {
 		// data, _ := json.Marshal(rds)
 		if len(rds) > 0 {
 			latest := rds[0]
-			ctx.Data["Latest"] = struct2JS(latest)
+			ctx.Data["Current"] = struct2JS(latest)
 		}
+		ctx.Data["Records"] = struct2JS(rds)
+		ctx.HTML(200, "homepage")
+	})
+
+	m.Get("/:name", func(ctx *macaron.Context) {
+		// keeper.GetRecord(name, index)
+		name := ctx.Params(":name")
+		// rds, _ := keeper.ListUniqRecords()
+		rds, _ := keeper.ListRecords(name, 8)
+		latest := rds[0]
+		ctx.Data["Current"] = struct2JS(latest)
+		ctx.Data["Records"] = struct2JS(rds)
+		ctx.HTML(200, "homepage")
+	})
+
+	m.Get("/settings", func(ctx *macaron.Context) {
+		ctx.Data["Fresh"] = template.JS("true")
+		ctx.HTML(200, "settings")
+	})
+
+	m.Get("/:name/builds/:index", func(ctx *macaron.Context) {
+		name := ctx.Params(":name")
+		index := ctx.ParamsInt(":index")
+		rec, _ := keeper.GetRecord(name, index)
+		rds, _ := keeper.ListRecords(name, 8)
+		ctx.Data["Current"] = struct2JS(rec)
 		ctx.Data["Records"] = struct2JS(rds)
 		ctx.HTML(200, "homepage")
 	})
@@ -60,6 +87,24 @@ func initRoutes() {
 		ctx.Data["Task"] = struct2JS(task)
 		ctx.Data["Fresh"] = struct2JS(created)
 		ctx.HTML(200, "settings")
+	})
+
+	m.Get("/api/records/:name/index/:index", func(ctx *macaron.Context) {
+		name := ctx.Params(":name")
+		index := ctx.ParamsInt(":index")
+		rec, err := keeper.GetRecord(name, index)
+		if err != nil {
+			ctx.Error(500, err.Error())
+		}
+		ctx.JSON(200, rec)
+	})
+
+	m.Get("/api/tasks", func(ctx *macaron.Context) {
+		rds, err := keeper.ListUniqRecords()
+		if err != nil {
+			ctx.Error(500, err.Error())
+		}
+		ctx.JSON(200, rds)
 	})
 
 	m.Post("/api/tasks", func(ctx *macaron.Context) {
@@ -131,7 +176,8 @@ func initRoutes() {
 		for {
 			cnt, err := rd.Read(buf)
 			if err != nil && err == io.EOF {
-				wsend("finish", buf[:cnt])
+				wsend("stream", buf[:cnt])
+				wsend("finish", []byte(fmt.Sprintf("%d", rec.ExitCode)))
 				break
 			}
 			if err != nil {

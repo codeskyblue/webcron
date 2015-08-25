@@ -16,5 +16,13 @@
         "description": "这个是什么东西",
         "environ": {},
         "enabled": true
+    },
+    {
+        "name": "yy",
+        "schedule": "* * * * * *",
+        "command": "echo hi boy",
+        "description": "haha",
+        "environ": {},
+        "enabled": true
     }
 ]
