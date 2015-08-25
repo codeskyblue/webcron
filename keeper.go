@@ -67,7 +67,9 @@ func (k *Keeper) NewRecord(name string) (key string, rec *Record, err error) {
 		return "", nil, fmt.Errorf("No such task has name: %s", name)
 	}
 
+	xe.ShowSQL = true
 	total, err := xe.Where("name = ?", name).Count(&Record{})
+	log.Println("CC:", total, err)
 
 	// order update
 	k.removeFromOrder(name)

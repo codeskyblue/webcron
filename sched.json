@@ -1,28 +1,12 @@
 [
     {
-        "name": "mysqldb-dump",
-        "schedule": "*/7 * * * * *",
-        "command": "./go-cron -lsdk -sd",
-        "description": "这个是什么？",
-        "environ": {
-            "GOPATH": "/User/skyblue"
-        },
-        "enabled": true
-    },
-    {
         "name": "hello",
-        "schedule": "*/12 * * * * *",
-        "command": "scripts\\hello.exe -e 2",
-        "description": "这个是什么东西",
-        "environ": {},
-        "enabled": true
-    },
-    {
-        "name": "yy",
         "schedule": "* * * * * *",
-        "command": "echo hi boy",
-        "description": "haha",
-        "environ": {},
+        "command": "echo hello world",
+        "description": "你好",
+        "environ": {
+            "YY": "123"
+        },
         "enabled": true
     }
 ]

@@ -206,13 +206,13 @@ func main() {
 	flag.Parse()
 
 	var err error
-	// xe, err = xorm.NewEngine("sqlite3", "./test.db")
-	xe, err = xorm.NewEngine("mysql", "cron:cron@tcp(10.246.13.180:3306)/cron?charset=utf8")
+	xe, err = xorm.NewEngine("sqlite3", "./test.db")
+	//xe, err = xorm.NewEngine("mysql", "cron:cron@tcp(10.246.13.180:3306)/cron?charset=utf8")
 	// xe, err = xorm.NewEngine("mysql", "root:@/cron?charset=utf8")
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := xe.Sync2(Record{}); err != nil {
+	if err := xe.Sync(Record{}); err != nil {
 		log.Fatal(err)
 	}
 
