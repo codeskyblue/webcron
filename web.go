@@ -59,9 +59,15 @@ func initRoutes() {
 		// keeper.GetRecord(name, index)
 		name := ctx.Params(":name")
 		// rds, _ := keeper.ListUniqRecords()
-		rds, _ := keeper.ListRecords(name, 8)
-		latest := rds[0]
-		ctx.Data["Current"] = struct2JS(latest)
+		rds, err := keeper.ListRecords(name, 8)
+		if err != nil {
+			ctx.Error(501, err.Error())
+			return
+		}
+		if len(rds) > 0 {
+			latest := rds[0]
+			ctx.Data["Current"] = struct2JS(latest)
+		}
 		ctx.Data["Records"] = struct2JS(rds)
 		ctx.HTML(200, "homepage")
 	})
