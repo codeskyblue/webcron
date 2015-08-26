@@ -20,6 +20,9 @@ godep go build
 ./webcrontab
 ```
 
+## ChangeLog
+- 2015-08-26: First release. Heroku support.
+
 ## Contribute
 Since the first ok version is released. This really takes me a lot of time, finally get it works. Very happy.
 
