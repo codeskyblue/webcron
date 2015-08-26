@@ -99,6 +99,15 @@ func initRoutes() {
 		ctx.JSON(200, rec)
 	})
 
+	m.Delete("/api/tasks/:name", func(ctx *macaron.Context) {
+		name := ctx.Params(":name")
+		err := keeper.DelTask(name)
+		if err != nil {
+			ctx.Error(500, err.Error())
+		}
+		ctx.JSON(200, "success")
+	})
+
 	m.Get("/api/tasks", func(ctx *macaron.Context) {
 		rds, err := keeper.ListUniqRecords()
 		if err != nil {
