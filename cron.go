@@ -21,6 +21,11 @@ var xe *xorm.Engine
 const (
 	TRIGGER_MANUAL   = "manual"
 	TRIGGER_SCHEDULE = "schedule"
+
+	STATUS_RUNNING = "running"
+	STATUS_PENDING = "pending"
+	STATUS_SUCCESS = "success"
+	STATUS_FAILURE = "failure"
 )
 
 type JSONTime time.Time
@@ -66,7 +71,8 @@ func execute(rec *Record, command string, args []string) (err error) {
 	//log.Printf("executing: %s %s", command, strings.Join(args, " "))
 
 	rec.wb = NewWriteBroadcaster()
-	rec.Running = true
+	rec.Running = true // FIXME(ssx): need to delete
+	rec.Status = STATUS_RUNNING
 
 	cmd := exec.Command(command, args...)
 	//cmd.Stdout = rec.wb
@@ -74,6 +80,9 @@ func execute(rec *Record, command string, args []string) (err error) {
 	cmd.Stdout = io.MultiWriter(os.Stdout, rec.wb)
 	cmd.Stderr = io.MultiWriter(os.Stderr, rec.wb)
 	for k, v := range rec.T.Environ {
+		if cmd.Env == nil {
+			cmd.Env = os.Environ()
+		}
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
 	if err = cmd.Start(); err != nil {
@@ -82,6 +91,7 @@ func execute(rec *Record, command string, args []string) (err error) {
 	}
 	// extrace exit_code from err
 	if err = cmd.Wait(); err != nil {
+		rec.wb.Write([]byte("\n---------- ERROR ----------\n" + err.Error()))
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 				// log.Printf("Exit Status: %d", status.ExitStatus())
@@ -115,6 +125,7 @@ type Record struct {
 	T         Task          `json:"task" xorm:"json task"`
 
 	Buffer  *bytes.Buffer     `json:"-" xorm:"-"`
+	Status  string            `json:"status" xorm:"status"` // Replace Running
 	Running bool              `json:"running" xorm:"-"`
 	wb      *WriteBroadcaster `json:"-" xorm:"-"`
 }
@@ -140,6 +151,11 @@ func (r *Record) Done() (err error) {
 		return
 	}
 	r.Running = false
+	if r.ExitCode == 0 {
+		r.Status = STATUS_SUCCESS
+	} else {
+		r.Status = STATUS_FAILURE
+	}
 	_, err = xe.InsertOne(r)
 	return
 }

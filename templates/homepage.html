@@ -8,12 +8,10 @@
 		current = $scope.current = [[.Current]];
 		console.log($scope.records);
 		var termStatus = document.getElementById("term-status");
-		if (current.running){
-			termStatus.innerText = "running";
-			$scope.running = true;
+		if (current.status == 'failure'){
+			termStatus.innerText = "exit status: " + current.exit_code;
 		} else {
-			termStatus.innerText = "exit: " + current.exit_code;
-			$scope.running = false;
+			termStatus.innerText = current.status;
 		}
 		var top = 400;
 		var duration = 2000;
@@ -42,28 +40,40 @@
 					</a>
 				</div>
 				<ul class="nav side-nav">
-					<li ng-class="t.exit_code ? 'failure' : 'success'" ng-repeat="t in records | filter:search">
+					<li ng-class="t.status" class="left-status" ng-repeat="t in records | filter:search">
 						<div class="item-title">
-							<a href="/{{t.name}}">
+							<a ng-class='t.status' href="/{{t.name}}">
 								<h3><span class="glyphicon" ng-class="t.exit_code ? 'glyphicon-remove' : 'glyphicon-ok'"></span>
 								{{t.name}}</h3>
 							</a>
 							<span class="pull-right">
-								<a href="/settings/{{t.name}}">
-									<span class="glyphicon glyphicon-cog"></span>
-								</a>
-								<a href="/{{t.name}}/builds/{{t.index}}">
+								<a class="quick-link" ng-hide="t.status == 'pending'" href="/{{t.name}}/builds/{{t.index}}">
 									#{{t.index}}
+								</a>
+								<a class="quick-link" href="/settings/{{t.name}}">
+									<span class="glyphicon glyphicon-cog"></span>
 								</a>
 							</span>
 						</div>
 						<div class="item-info">
 							<span class="glyphicon glyphicon-time"></span>
-							Duration: {{t.duration/1000000000}} sec
+							Duration: 
+							<span ng-if="['success', 'failure'].indexOf(t.status) >= 0">
+								{{t.duration/1000000000}} sec
+							</span>
+							<span ng-if="t.status == 'pending'">
+								...
+							</span>
 						</div>
 						<div class="item-info">
 							<span class="glyphicon glyphicon-calendar"></span>
-							Finished: {{t.created_at | humanizeRelativeTime}}
+							Finished: 
+							<span ng-if="['success', 'failure'].indexOf(t.status) >= 0">
+								{{t.created_at | humanizeRelativeTime}}
+							</span>
+							<span ng-if="t.status == 'pending'">
+								...
+							</span>
 						</div>
 					</li>
 				</ul>
@@ -79,6 +89,7 @@
 								<span class="icon-status glyphicon" ng-class="current.exit_code ? 'glyphicon-remove' : 'glyphicon-ok'"></span>
 							</div>
 							<div class="tile-main">
+								exit status: {{current.exit_code}}
 							</div>
 							<div class="tile-additional">
 							</div>

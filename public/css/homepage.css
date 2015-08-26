@@ -23,13 +23,20 @@ ul.side-nav>li>a.active{
 	font-weight: 800;
 }
 
-li.success {
+li.left-status {
 	border-left: 8px solid;
+}
+li.success {
 	border-color: #3FA75F;
 }
 li.failure {
-	border-left: 8px solid;
 	border-color: red;
+}
+li.pending {
+	border-color: #aaa;
+}
+li.running {
+	border-color: #F6F034;
 }
 
 ul.side-nav li{
@@ -77,6 +84,11 @@ div.tile-status {
 	border-bottom-left-radius: 4px;
 }
 
+div.tile-main {
+	padding-top: 5px;
+	margin-left: 3em;
+}
+
 span.icon-status {
 	width: 1.1em;
 	display: block;
@@ -96,4 +108,15 @@ div.failure {
 }
 div.failure>span.glyphicon-remove {
 	color: black;
+}
+
+a.pending {
+    color: #AAAAAA;
+    cursor: default;
+    pointer-events: none;
+    text-decoration: none;
+}
+
+a.quick-link {
+	/*margin: 0 3px;*/
 }

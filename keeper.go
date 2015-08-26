@@ -58,6 +58,29 @@ func (k *Keeper) reloadCron() {
 	k.cr.Start()
 }
 
+func (k *Keeper) orderedTasks() []Task {
+	var ts = make([]Task, 0)
+	traveled := make(map[string]bool, 0)
+	for _, name := range k.taskOrder {
+		ts = append(ts, k.tasks[name])
+		traveled[name] = true
+	}
+	for name, task := range k.tasks {
+		if !traveled[name] {
+			ts = append(ts, task)
+		}
+	}
+	return ts
+}
+
+func (k *Keeper) save() error {
+	data, err := json.MarshalIndent(k.orderedTasks(), "", "    ")
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(gcfg.SchedFile, data, 0644)
+}
+
 func (k *Keeper) NewRecord(name string) (key string, rec *Record, err error) {
 	k.tkmu.Lock()
 	defer k.tkmu.Unlock()
@@ -132,11 +155,14 @@ func (k *Keeper) ListUniqRecords() (rs []*Record, err error) {
 		if traveled[task.Name] {
 			continue
 		}
+		traveled[task.Name] = true
 		var rec = new(Record)
 		exists, err := xe.Where("`name` = ?", task.Name).Desc("created_at").Get(rec)
 		if !exists || err != nil {
 			log.Printf("exists: %v, err: %v", exists, err)
-			continue
+			rec.Name = task.Name
+			rec.Status = STATUS_PENDING
+			rec.T = task
 		}
 		rs = append(rs, rec)
 	}
@@ -228,27 +254,4 @@ func (k *Keeper) GetOrCreateTask(name string) (task Task, created bool) {
 	return Task{
 		Name: name,
 	}, true
-}
-
-func (k *Keeper) orderedTasks() []Task {
-	var ts = make([]Task, 0)
-	traveled := make(map[string]bool, 0)
-	for _, name := range k.taskOrder {
-		ts = append(ts, k.tasks[name])
-		traveled[name] = true
-	}
-	for name, task := range k.tasks {
-		if !traveled[name] {
-			ts = append(ts, task)
-		}
-	}
-	return ts
-}
-
-func (k *Keeper) save() error {
-	data, err := json.MarshalIndent(k.orderedTasks(), "", "    ")
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(gcfg.SchedFile, data, 0644)
 }
