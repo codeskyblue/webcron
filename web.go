@@ -129,6 +129,7 @@ func initRoutes() {
 			ctx.Error(500, err.Error())
 			return
 		}
+		//log.Println(task)
 		// FIXME(ssx): need change
 		task.Enabled = true
 		if err := keeper.PutTask(task.Name, task); err != nil {

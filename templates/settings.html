@@ -14,7 +14,7 @@
 				$scope.task = [[.Task]];
 				$scope.fresh = [[.Fresh]]; // Is that newer
 				// $scope.envVars = {GOPATH: "/User/skyblue"};
-				$scope.envVars = {};
+				$scope.envVars = $scope.task.environ || {};
 				$scope.addEnv = function(e){
 					$scope.envVars[e.name] = e.value;
 					e.name = e.value = "";
