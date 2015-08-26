@@ -2,7 +2,7 @@
 
 Web based crontab.
 
-Demo page: <http://webcron-shxsun.myalauda.cn/>
+Demo page: <http://webcron.herokuapp.com/>
 
 ![homepage](scripts/homepage.png)
 
