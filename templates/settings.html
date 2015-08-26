@@ -22,7 +22,12 @@
 				$scope.envDel = function(name) {
 					delete($scope.envVars[name]);
 				};
+                var ignoreOnce = false;
 				$scope.save = function(){
+                    if (ignoreOnce) {
+                        ignoreOnce = false;
+                        return;
+                    }
 					$scope.task['environ'] = $scope.envVars;
 					var reqCall = $scope.fresh ? $http.post : $http.put;
 					reqCall("/api/tasks", $scope.task)
@@ -34,6 +39,18 @@
 							ngNotify.set(res, 'error');
 						});
 				};
+                $scope.delTask = function(){
+                    ignoreOnce = true;
+                    $http.delete("/api/tasks/"+$scope.task.name)
+                        .success(function(res){
+                            ngNotify.set("Deleted", "error");
+                        })
+                        .error(function(res){
+                            alert(res);
+                        })
+                    //console.log("del task");
+                    return false;
+                };
 			});
 			$(function(){
 				$('[data-toggle="tooltip"]').tooltip();
@@ -116,7 +133,8 @@
 									</div>
 								</div>
 							</section>
-							<button class="btn btn-success">Save</button>
+							<button type="submit" class="btn btn-success">Save</button>
+                            <button ng-hide="fresh" ng-click="delTask()" class="btn btn-danger">Delete</button>
 						</form>
 					</div>
 					<div du-scroll-container>

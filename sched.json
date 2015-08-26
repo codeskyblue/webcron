@@ -4,7 +4,9 @@
         "schedule": "*/20 * * * * *",
         "command": "for i in $(seq 10)\ndo\n    echo hello world: 10-$i\n    sleep 1\ndone",
         "description": "你好",
-        "environ": {},
+        "environ": {
+            "Name": "123"
+        },
         "enabled": true
     }
 ]
