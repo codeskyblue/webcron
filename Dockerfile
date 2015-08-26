@@ -7,7 +7,7 @@ WORKDIR /gopath/src/github.com/codeskyblue/webcrontab
 RUN go get -v
 RUN go build
 
-EXPOSE 4000
+EXPOSE 80
 ENTRYPOINT []
-CMD ["./webcrontab", "-port", "4000"]
+CMD ["./webcrontab", "-port", "80"]
 
