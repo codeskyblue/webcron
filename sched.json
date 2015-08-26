@@ -2,7 +2,8 @@
     {
         "name": "hello",
         "schedule": "*/20 * * * * *",
-        "command": "for i in $(seq 10)\ndo\n    echo hello world: 10-$i\n    sleep 1\ndone",
+        "command": "for i in $(seq 10)\ndo\n    echo hello world: 10-$i $(pwd)\n    sleep 1\ndone",
+        "dir": "/Users",
         "description": "你好",
         "environ": {
             "Name": "123"

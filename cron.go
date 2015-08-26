@@ -39,6 +39,7 @@ type Task struct {
 	Name        string            `json:"name"`
 	Schedule    string            `json:"schedule"`
 	Command     string            `json:"command"`
+	Dir         string            `json:"dir"`
 	Description string            `json:"description"`
 	Environ     map[string]string `json:"environ"`
 	Enabled     bool              `json:"enabled"`
@@ -85,6 +86,7 @@ func execute(rec *Record, command string, args []string) (err error) {
 		}
 		cmd.Env = append(cmd.Env, k+"="+v)
 	}
+	cmd.Dir = rec.T.Dir
 	if err = cmd.Start(); err != nil {
 		rec.ExitCode = 130
 		return err
