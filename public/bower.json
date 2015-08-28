@@ -15,7 +15,6 @@
   ],
   "dependencies": {
     "angular-scroll": "~0.7.2",
-    "angular-websocket": "~1.0.13",
     "angularjs": "~1.4.4",
     "angularjs-humanize": "~0.0.1",
     "bootstrap": "~3.3.5",
