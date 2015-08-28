@@ -9,5 +9,14 @@
             "Name": "123"
         },
         "enabled": true
+    },
+    {
+        "name": "hello     2",
+        "schedule": "@every 24h",
+        "command": "asdf",
+        "dir": "",
+        "description": "again",
+        "environ": {},
+        "enabled": true
     }
 ]

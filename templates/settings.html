@@ -92,6 +92,10 @@
 										<a href="#" tabindex=-1 id="schedule-hint" data-toggle="tooltip" data-placement="top" title="[sec min hour day month week] click to see more">
 											<span class="glyphicon glyphicon-question-sign"></span>
 										</a>
+										<i>Quick Set: every</i>
+										<span class="btn sched-set" ng-click='task.schedule="@every 1h"'>hour</span>
+										<span class="btn sched-set" ng-click='task.schedule="@every 1h30m"'>1h30m</span>
+										<span class="btn sched-set" ng-click='task.schedule="@every 24h"'>day</span>
 									</label>
 									<input ng-model="task.schedule" class="input-schedule form-control" type="text" required>
 								</div>
