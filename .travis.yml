@@ -1,0 +1,7 @@
+language: go
+go:
+  - 1.5
+script:
+  - go test -v ./...
+after_success:
+  - bash -c "$(curl -fsSL http://bitly.com/gorelease)" gorelease

@@ -1,0 +1,12 @@
+author: shengxiang
+description: '...'
+includes:
+  - README.md
+  - LICENSE
+  - conf
+  - templates
+  - public
+excludes:
+  - \.git
+script:
+  - godep go build
