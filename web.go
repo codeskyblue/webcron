@@ -95,6 +95,20 @@ func initRoutes() {
 		ctx.HTML(200, "settings")
 	})
 
+	m.Post("/Run/", func(ctx *macaron.Context) {
+		type T struct {
+			Name string
+		}
+		var t T
+		dec := json.NewDecoder(ctx.Req.Body().ReadCloser())
+		if err := dec.Decode(&t); err != nil {
+			ctx.Error(500, err.Error())
+			return
+		}
+		log.Println(t.Name)
+		keeper.RunTask(t.Name)
+	})
+
 	m.Get("/api/records/:name/index/:index", func(ctx *macaron.Context) {
 		name := ctx.Params(":name")
 		index := ctx.ParamsInt(":index")

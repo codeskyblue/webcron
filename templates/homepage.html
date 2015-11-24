@@ -15,6 +15,12 @@
 		}
 		var top = 400;
 		var duration = 2000;
+		$scope.runTask = function(taskName){
+			console.log(taskName);
+                    $http.post("/Run/",{'name':taskName});
+                        
+                    return false;
+                };
 
 
 	});
@@ -82,7 +88,7 @@
 		<div class="col-md-9">
 			<div id="main-content" du-scroll-container>
 				<div>
-					<h2>{{current.name}} <small>#{{current.index}}</small><a class="btn btn-sm btn-default pull-right" href="/settings/{{current.name}}">Setting</a></h2>
+					<h2>{{current.name}} <small>#{{current.index}}</small><a class="btn btn-sm btn-default pull-right" href="/settings/{{current.name}}">Setting</a><a class="btn btn-sm btn-default pull-right" ng-click="runTask(current.name)">Run</a></h2>
 					<div>
 						<section class="tile">
 							<div class="tile-status" ng-class="current.exit_code ? 'failure' : 'success'">
