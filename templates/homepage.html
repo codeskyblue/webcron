@@ -15,6 +15,18 @@
 		}
 		var top = 400;
 		var duration = 2000;
+		$scope.runTask = function(taskName){
+			console.log(taskName);
+                    $http.post("/run/",{'name':taskName})
+                    .success(function(res){
+                            console.log("return");
+                        })
+                    .error(function(res){
+                            console.log("err");
+                        });
+                     window.location="/"+taskName
+                    return false;
+                };
 
 
 	});
@@ -47,6 +59,7 @@
 								{{t.name}}</h3>
 							</a>
 							<span class="pull-right">
+								<a class="quick-link" href="javascript:;" ng-click=runTask(t.name) ><span class="glyphicon glyphicon-play"></span></a>
 								<a class="quick-link" ng-hide="t.status == 'pending'" href="/{{t.name}}/builds/{{t.index}}">
 									#{{t.index}}
 								</a>

@@ -230,6 +230,16 @@ func (k *Keeper) DelTask(name string) error {
 	return k.save()
 }
 
+func (k *Keeper) RunTask(name string) error {
+	fmt.Println("==========runtask==========")
+
+	if tk, ok := k.tasks[name]; ok {
+		tk.Run(TRIGGER_MANUAL)
+		return nil
+	}
+	return errors.New("Can't run tasks")
+}
+
 func (k *Keeper) PutTask(name string, t Task) error {
 	k.tkmu.Lock()
 	defer k.tkmu.Unlock()
