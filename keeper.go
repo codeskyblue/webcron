@@ -231,9 +231,8 @@ func (k *Keeper) DelTask(name string) error {
 }
 
 func (k *Keeper) RunTask(name string) error {
-	k.tkmu.Lock()
-	defer k.tkmu.Unlock()
-	delete(k.tasks, name)
+	fmt.Println("==========runtask==========")
+
 	if tk, ok := k.tasks[name]; ok {
 		tk.Run(TRIGGER_MANUAL)
 		return nil
